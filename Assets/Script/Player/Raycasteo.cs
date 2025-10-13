@@ -42,11 +42,11 @@ public class Raycasteo : MonoBehaviour
                     hit.rigidbody.AddForceAtPosition(shootPoint.forward * fuerza, hit.point);
                     //hit.transform.GetComponent<VidaEnemigo>().TomarDanio(danio);
                 }
-                if (hit.transform.CompareTag("Caja"))
+                /*if (hit.transform.CompareTag("Caja"))
                 {
                     hit.rigidbody.AddForce(-hit.normal * fuerza);
                     hit.rigidbody.AddForceAtPosition(shootPoint.forward * fuerza, hit.point);
-                }
+                }*/
 
             }
 
@@ -58,7 +58,7 @@ public class Raycasteo : MonoBehaviour
             clone.GetComponent<Rigidbody>().AddForce(transform.forward * bolaVelo);
             if (hit.collider.CompareTag("Enemigo"))
             {
-                //hit.collider.GetComponent<Gato>().Limpiar(poderLimpieza * Time.deltaTime * 20);
+                hit.collider.GetComponent<Gato>().Limpiar(poderLimpieza * Time.deltaTime * 20);
             }
             //audioSource.Play();
         }

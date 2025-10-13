@@ -15,11 +15,11 @@ public class Bala : MonoBehaviour
     void OnCollisionEnter(Collision collision)
     {
 
-        /*Gato gato = collision.gameObject.GetComponent<Gato>();
+        Gato gato = collision.gameObject.GetComponent<Gato>();
         if (gato != null)
         {
             gato.Limpiar(poderLimpieza);
-        }*/
+        }
 
 
     }
