@@ -86,7 +86,11 @@ public class GameManager : MonoBehaviour
 
     void ActualizarContador()
     {
-       // contadorTxt.text = "Cats left:" + gatosRestantes;
+        if (contadorTxt != null)
+        {
+            int gatosLimpios = gatosTotales ;
+            contadorTxt.text = $"Cats Cleaned: {gatosLimpios}";
+        }
     }
 
     private void Update()

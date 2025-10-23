@@ -1,4 +1,5 @@
-using UnityEngine;
+锘縰sing UnityEngine;
+using UnityEngine.UI; // 馃憟 necesario para usar Slider
 using System.Collections;
 
 public class Raycasteo : MonoBehaviour
@@ -18,25 +19,33 @@ public class Raycasteo : MonoBehaviour
     private int currentAmmo;
     private bool sinMunicion = false;
 
+    [Header("UI")]
+    [SerializeField] private Slider ammoBar; // 馃憟 referencia a la barra de munici贸n
+
     private void Start()
     {
         shootPoint = transform.parent;
         currentAmmo = maxAmmo;
+
+        if (ammoBar != null)
+        {
+            ammoBar.maxValue = maxAmmo;
+            ammoBar.value = currentAmmo;
+        }
     }
 
     void OnEnable()
     {
         sinMunicion = false;
+        if (ammoBar != null) ammoBar.value = currentAmmo;
     }
 
     void Update()
     {
-        // Si no hay munici髇, no puede disparar
         if (sinMunicion) return;
 
         if (Input.GetMouseButtonDown(0))
         {
-            // Disparo de raycast
             Physics.Raycast(shootPoint.position, transform.forward, out hit, 100);
             if (hit.transform != null)
             {
@@ -50,44 +59,51 @@ public class Raycasteo : MonoBehaviour
                         rb.AddForce(-hit.normal * fuerza);
                         rb.AddForceAtPosition(shootPoint.forward * fuerza, hit.point);
                     }
-                    //hit.transform.GetComponent<VidaEnemigo>().TomarDanio(danio);
                 }
             }
         }
 
         if (Input.GetMouseButtonDown(1))
         {
-            // Disparo de proyectil
             if (currentAmmo > 0)
             {
                 Transform clone = Instantiate(Bala, shooter.position, shooter.rotation);
                 clone.GetComponent<Rigidbody>().AddForce(transform.forward * bolaVelo);
 
-                // Limpieza de enemigos
                 if (hit.collider != null && hit.collider.CompareTag("Enemigo"))
                 {
                     hit.collider.GetComponent<Gato>()?.Limpiar(poderLimpieza * Time.deltaTime * 20);
                 }
 
                 currentAmmo--;
+                ActualizarBarra(); // 馃憟 actualiza la barra
+
                 if (currentAmmo <= 0)
                 {
                     sinMunicion = true;
-                    Debug.Log("Sin munici髇. Dir韌ete a una estaci髇 de recarga.");
+                    Debug.Log("Sin munici贸n. Dir铆gete a una estaci贸n de recarga.");
                 }
             }
             else
             {
-                Debug.Log("No puedes disparar. Necesitas recargar en una estaci髇.");
+                Debug.Log("No puedes disparar. Necesitas recargar en una estaci贸n.");
             }
         }
     }
 
-    // M閠odo llamado por la estaci髇 de recarga
+    // 馃攧 M茅todo para actualizar la barra de munici贸n
+    private void ActualizarBarra()
+    {
+        if (ammoBar != null)
+            ammoBar.value = currentAmmo;
+    }
+
+    // 馃攱 M茅todo llamado por la estaci贸n de recarga
     public void RecargarDesdeEstacion()
     {
         currentAmmo = maxAmmo;
         sinMunicion = false;
-        Debug.Log("Munici髇 restaurada desde estaci髇 de recarga.");
+        Debug.Log("Munici贸n restaurada desde estaci贸n de recarga.");
+        ActualizarBarra(); // 馃憟 actualiza tambi茅n al recargar
     }
 }
