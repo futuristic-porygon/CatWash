@@ -1,8 +1,7 @@
-using System.Globalization;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,6 +17,8 @@ public class GameManager : MonoBehaviour
     public float posicionY;
     public float posicionZ;
 
+    public int limiteGatosLogro = 10;
+
 
     public TextMeshProUGUI contadorTxt;
 
@@ -32,7 +33,7 @@ public class GameManager : MonoBehaviour
 
     public string saveName;
 
-    
+
     private float tiempo;
 
     public Text puntosTxt;
@@ -41,6 +42,13 @@ public class GameManager : MonoBehaviour
     public float tiempoTotal = 60f;
     private float tiempoRestante;
     private int puntos = 0;
+
+    public GameObject canvasLogros;
+    public TextMeshProUGUI textoLogros;
+    public bool logroDesbloqueado = false;
+    public bool canvasVisible = false;
+    public string mensajeDefault;
+
 
 
     private void Awake()
@@ -69,27 +77,42 @@ public class GameManager : MonoBehaviour
             panelVictoria.SetActive(false);
     }
 
+    public void RegisterGato()
+    {
+        this.gatosTotales++;
+        this.gatosRestantes++;
+        this.ActualizarContador();
+    }
+
     public void GatoLimpio()
     {
-        gatosRestantes--;
-        ActualizarContador();
+        this.gatosRestantes--;
+        this.ActualizarContador();
 
-        if (gatosRestantes <= 0)
+        int gatosLimpiosActual = this.gatosTotales - this.gatosRestantes;
+
+        if (gatosLimpiosActual >= this.limiteGatosLogro)
         {
+            this.DesbloquearLogroContador();
+        }
+
+        if (this.gatosRestantes <= 0)
+        {
+
             if (panelVictoria != null)
                 panelVictoria.SetActive(false);
 
             //if (TimerManager.Instance != null)
-                //TimerManager.Instance.TerminarJuego();
+            //TimerManager.Instance.TerminarJuego();
         }
     }
 
     void ActualizarContador()
     {
-        if (contadorTxt != null)
+        if (this.contadorTxt != null)
         {
-            int gatosLimpios = gatosTotales ;
-            contadorTxt.text = $"Cats Cleaned: {gatosLimpios}";
+            int gatosLimpios = this.gatosTotales - this.gatosRestantes;
+            this.contadorTxt.text = string.Format("Cats Cleaned: {0}/{1}", gatosLimpios, this.gatosTotales);
         }
     }
 
@@ -146,4 +169,48 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+
+    public void DesbloquearLogroContador()
+    {
+
+        if (this.logroDesbloqueado)
+        {
+            return;
+        }
+
+        this.logroDesbloqueado = true;
+
+        this.ActualizarTextoLogros();
+
+        if (this.canvasLogros != null)
+        {
+            this.canvasLogros.SetActive(true);
+            this.canvasVisible = true;
+
+            Invoke("OcultarCanvasLogros", 5f);
+        }
+
+    }
+
+    public void OcultarCanvasLogros()
+    {
+        if(this.canvasLogros != null)
+        {
+            this.canvasLogros.SetActive(false);
+            this.canvasVisible = false;
+        }
+    }
+
+    public void ActualizarTextoLogros()
+    {
+        if (this.textoLogros != null)
+        {
+            if (this.logroDesbloqueado)
+            {
+                this.textoLogros.text = this.mensajeDefault;
+            }
+        }
+    }
+
+
 }

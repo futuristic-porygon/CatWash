@@ -9,6 +9,14 @@ public class Gato : MonoBehaviour
 
     [SerializeField] private float tiempoAntesDeDestruir = 3f;
 
+    public void Awake()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterGato();
+        }
+    }
+
     void Start()
     {
         rend = GetComponent<Renderer>();
@@ -32,7 +40,7 @@ public class Gato : MonoBehaviour
 
             Debug.Log("¡Gato limpio!");
 
-            Destroy(gameObject, tiempoAntesDeDestruir);
+            //Destroy(gameObject, tiempoAntesDeDestruir);
         }
     }
 }
