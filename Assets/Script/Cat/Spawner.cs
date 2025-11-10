@@ -1,9 +1,10 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
+    [Header("Configuración del Spawner")]
     public GameObject gatoPrefab;
     public int maxGatos = 20;
     public float spawnInterval = 2f;
@@ -20,6 +21,7 @@ public class Spawner : MonoBehaviour
     {
         while (contador < maxGatos)
         {
+            // 🔹 Posiciones aleatorias dentro de los rangos definidos
             int xPos = Random.Range(-16, 13);
             int zPos = Random.Range(-20, 1);
 
@@ -27,7 +29,7 @@ public class Spawner : MonoBehaviour
 
             listaGatos.Add(gato);
 
-           
+            // 🔹 Limpieza automática de referencia cuando el gato se destruye
             StartCoroutine(RemoverGatoAlDestruir(gato));
 
             contador++;
@@ -37,13 +39,11 @@ public class Spawner : MonoBehaviour
 
     private IEnumerator RemoverGatoAlDestruir(GameObject gato)
     {
-       
         while (gato != null)
         {
             yield return null;
         }
 
-        
         listaGatos.Remove(gato);
     }
 }

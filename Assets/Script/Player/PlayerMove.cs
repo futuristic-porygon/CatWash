@@ -35,8 +35,11 @@ public class PlayerMove : MonoBehaviour
     private bool isHoldingSpace = false;
     private float fuelRefillTimer = 0f;
 
+    AudioManager audioManager;
+
     private void Awake()
     {
+        audioManager =GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         charCtrl = GetComponent<CharacterController>();
         if (groundCheck == null) groundCheck = transform.GetChild(2);
         velocidadActual = velocidadNormal;
@@ -60,6 +63,7 @@ public class PlayerMove : MonoBehaviour
         // Salto normal
         if (isGrounded && Input.GetKeyDown(KeyCode.Space))
             veloY.y = Mathf.Sqrt(fuerzaSalto * -2f * gravity);
+           
 
         // Detectar jetpack
         if (Input.GetKeyDown(KeyCode.Space)) isHoldingSpace = true;

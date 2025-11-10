@@ -8,11 +8,16 @@ public class Gato : MonoBehaviour
     private bool limpio = false;
 
     [SerializeField] private float tiempoAntesDeDestruir = 3f;
+    AudioManager audioManager;
+
+    private void Awake()
+    {
+        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
 
     void Start()
     {
         rend = GetComponent<Renderer>();
-
         transform.rotation = Quaternion.Euler(0f, 180f, 0f);
     }
 
@@ -32,6 +37,8 @@ public class Gato : MonoBehaviour
 
             Debug.Log("¡Gato limpio!");
 
+            audioManager.PlaySFX(audioManager.clean);
+            ScoreManager.Instance.AddPoint();
             Destroy(gameObject, tiempoAntesDeDestruir);
         }
     }

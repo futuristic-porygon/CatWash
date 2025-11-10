@@ -1,3 +1,4 @@
+﻿using System.Collections;
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,7 +19,6 @@ public class GameManager : MonoBehaviour
     public float posicionY;
     public float posicionZ;
 
-
     public TextMeshProUGUI contadorTxt;
 
     public GameObject panelVictoria;
@@ -27,21 +27,25 @@ public class GameManager : MonoBehaviour
     private int gatosTotales;
     private int gatosRestantes;
 
-
     public string nivel;
-
     public string saveName;
-
-    
-    private float tiempo;
 
     public Text puntosTxt;
     public Text tiempoTxt;
     public TextMeshProUGUI timerTxt;
     public float tiempoTotal = 60f;
+
     private float tiempoRestante;
     private int puntos = 0;
 
+    // 🔹 Variables nuevas
+    [Header("Control de pausa por gatos limpios")]
+    public int gatosPorPausa = 5;        // Cada cuántos gatos limpios se pausa el timer
+    public float duracionPausa = 10f;    // Duración de la pausa en segundos
+    private int gatosLimpiosActual = 0;  // Contador interno de gatos limpios
+    private bool enPausa = false;
+
+    private Timer timer;
 
     private void Awake()
     {
@@ -60,55 +64,80 @@ public class GameManager : MonoBehaviour
     {
         tiempoRestante = tiempoTotal;
 
-        Gato[] gatos = FindObjectsOfType<Gato>(); gatosTotales = gatos.Length;
+        // Buscar gatos iniciales
+        Gato[] gatos = FindObjectsOfType<Gato>();
+        gatosTotales = gatos.Length;
         gatosRestantes = gatosTotales;
 
         ActualizarContador();
 
         if (panelVictoria != null)
             panelVictoria.SetActive(false);
+
+        StartCoroutine(EsperarYAsignarTimer());
+    }
+
+    private IEnumerator EsperarYAsignarTimer()
+    {
+        yield return new WaitForSeconds(0.2f);
+        timer = FindObjectOfType<Timer>();
+
+        if (timer == null)
+            Debug.LogWarning("⚠️ GameManager no encontró el Timer en la escena.");
+        else
+            Debug.Log("✅ Timer detectado correctamente por GameManager.");
     }
 
     public void GatoLimpio()
     {
         gatosRestantes--;
+        gatosLimpiosActual++;
         ActualizarContador();
+
+        // 🔹 Verificar si toca pausar el timer
+        if (!enPausa && gatosLimpiosActual % gatosPorPausa == 0)
+        {
+            StartCoroutine(PausarTimerTemporalmente());
+        }
 
         if (gatosRestantes <= 0)
         {
             if (panelVictoria != null)
                 panelVictoria.SetActive(false);
-
-            //if (TimerManager.Instance != null)
-                //TimerManager.Instance.TerminarJuego();
         }
+    }
+
+    private IEnumerator PausarTimerTemporalmente()
+    {
+        enPausa = true;
+
+        if (timer != null)
+        {
+            timer.Pausar(true);
+            timer.CambiarColor(Color.yellow);
+        }
+
+        Debug.Log($"⏸️ Timer pausado por {duracionPausa} s (gatos limpios: {gatosLimpiosActual})");
+
+        yield return new WaitForSeconds(duracionPausa);
+
+        if (timer != null)
+        {
+            timer.Pausar(false);
+            timer.CambiarColor(Color.white);
+        }
+
+        Debug.Log("▶️ Timer reanudado");
+        enPausa = false;
     }
 
     void ActualizarContador()
     {
         if (contadorTxt != null)
         {
-            int gatosLimpios = gatosTotales ;
+            int gatosLimpios = gatosTotales - gatosRestantes;
             contadorTxt.text = $"Cats Cleaned: {gatosLimpios}";
         }
-    }
-
-    private void Update()
-    {
-        /*void Update()
-        {
-            if (!corriendo) return;
-
-            tiempo += Time.deltaTime;
-
-            if (timerTxt != null)
-                timerTxt.text = "Tiempo: " + tiempo.ToString("F2") + "s";
-        }*/
-
-
-
-        //puntosTxt.text = "Points: " + puntos;
-        //tiempoTxt.text = "Time: " + Mathf.Ceil(tiempoRestante);
     }
 
     public void SumarPuntos(int cantidad)
@@ -126,6 +155,7 @@ public class GameManager : MonoBehaviour
 
         nivel = SceneManager.GetActiveScene().name;
     }
+
     public void MoverJugador()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;

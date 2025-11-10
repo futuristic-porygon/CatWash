@@ -3,7 +3,12 @@ using UnityEngine;
 public class WeaponSwitcher : MonoBehaviour
 {
     public int selectedWeapon = 0;
+    AudioManager audioManager;
 
+    private void Awake()
+    {
+        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
     void Start()
     {
         SelectWeapon();
@@ -19,10 +24,12 @@ public class WeaponSwitcher : MonoBehaviour
             if (selectedWeapon >= transform.childCount - 1)
             {
                 selectedWeapon = 0;
+                audioManager.PlaySFX(audioManager.weaponChage);
             }
             else
             {
                 selectedWeapon++;
+                audioManager.PlaySFX(audioManager.weaponChage);
             }
         }
         if (Input.GetAxis("Mouse ScrollWheel") < 0f)
@@ -30,10 +37,12 @@ public class WeaponSwitcher : MonoBehaviour
             if (selectedWeapon <= 0)
             {
                 selectedWeapon = transform.childCount - 1;
+                audioManager.PlaySFX(audioManager.weaponChage);
             }
             else
             {
                 selectedWeapon--;
+                audioManager.PlaySFX(audioManager.weaponChage);
             }
         }
 

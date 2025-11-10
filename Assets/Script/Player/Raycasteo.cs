@@ -22,6 +22,12 @@ public class Raycasteo : MonoBehaviour
     [Header("UI")]
     [SerializeField] private Slider ammoBar; // 👈 referencia a la barra de munición
 
+    AudioManager audioManager;
+
+    private void Awake()
+    {
+        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
     private void Start()
     {
         shootPoint = transform.parent;
@@ -69,6 +75,7 @@ public class Raycasteo : MonoBehaviour
             {
                 Transform clone = Instantiate(Bala, shooter.position, shooter.rotation);
                 clone.GetComponent<Rigidbody>().AddForce(transform.forward * bolaVelo);
+                audioManager.PlaySFX(audioManager.weapon);
 
                 if (hit.collider != null && hit.collider.CompareTag("Enemigo"))
                 {
