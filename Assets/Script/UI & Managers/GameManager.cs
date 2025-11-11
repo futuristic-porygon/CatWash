@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+﻿using System.Collections;
+using System.Globalization;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+>>>>>>> origin/master
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -17,9 +25,12 @@ public class GameManager : MonoBehaviour
     public float posicionY;
     public float posicionZ;
 
+<<<<<<< HEAD
     public int limiteGatosLogro = 10;
 
 
+=======
+>>>>>>> origin/master
     public TextMeshProUGUI contadorTxt;
 
     public GameObject panelVictoria;
@@ -28,21 +39,24 @@ public class GameManager : MonoBehaviour
     private int gatosTotales;
     private int gatosRestantes;
 
-
     public string nivel;
-
     public string saveName;
 
+<<<<<<< HEAD
 
     private float tiempo;
 
+=======
+>>>>>>> origin/master
     public Text puntosTxt;
     public Text tiempoTxt;
     public TextMeshProUGUI timerTxt;
     public float tiempoTotal = 60f;
+
     private float tiempoRestante;
     private int puntos = 0;
 
+<<<<<<< HEAD
     public GameObject canvasLogros;
     public TextMeshProUGUI textoLogros;
     public bool logroDesbloqueado = false;
@@ -50,6 +64,16 @@ public class GameManager : MonoBehaviour
     public string mensajeDefault;
 
 
+=======
+    // 🔹 Variables nuevas
+    [Header("Control de pausa por gatos limpios")]
+    public int gatosPorPausa = 5;        // Cada cuántos gatos limpios se pausa el timer
+    public float duracionPausa = 10f;    // Duración de la pausa en segundos
+    private int gatosLimpiosActual = 0;  // Contador interno de gatos limpios
+    private bool enPausa = false;
+
+    private Timer timer;
+>>>>>>> origin/master
 
     private void Awake()
     {
@@ -68,13 +92,28 @@ public class GameManager : MonoBehaviour
     {
         tiempoRestante = tiempoTotal;
 
-        Gato[] gatos = FindObjectsOfType<Gato>(); gatosTotales = gatos.Length;
+        // Buscar gatos iniciales
+        Gato[] gatos = FindObjectsOfType<Gato>();
+        gatosTotales = gatos.Length;
         gatosRestantes = gatosTotales;
 
         ActualizarContador();
 
         if (panelVictoria != null)
             panelVictoria.SetActive(false);
+
+        StartCoroutine(EsperarYAsignarTimer());
+    }
+
+    private IEnumerator EsperarYAsignarTimer()
+    {
+        yield return new WaitForSeconds(0.2f);
+        timer = FindObjectOfType<Timer>();
+
+        if (timer == null)
+            Debug.LogWarning("⚠️ GameManager no encontró el Timer en la escena.");
+        else
+            Debug.Log("✅ Timer detectado correctamente por GameManager.");
     }
 
     public void RegisterGato()
@@ -86,12 +125,26 @@ public class GameManager : MonoBehaviour
 
     public void GatoLimpio()
     {
+<<<<<<< HEAD
         this.gatosRestantes--;
         this.ActualizarContador();
 
         int gatosLimpiosActual = this.gatosTotales - this.gatosRestantes;
 
         if (gatosLimpiosActual >= this.limiteGatosLogro)
+=======
+        gatosRestantes--;
+        gatosLimpiosActual++;
+        ActualizarContador();
+
+        // 🔹 Verificar si toca pausar el timer
+        if (!enPausa && gatosLimpiosActual % gatosPorPausa == 0)
+        {
+            StartCoroutine(PausarTimerTemporalmente());
+        }
+
+        if (gatosRestantes <= 0)
+>>>>>>> origin/master
         {
             this.DesbloquearLogroContador();
         }
@@ -101,37 +154,51 @@ public class GameManager : MonoBehaviour
 
             if (panelVictoria != null)
                 panelVictoria.SetActive(false);
+<<<<<<< HEAD
 
             //if (TimerManager.Instance != null)
             //TimerManager.Instance.TerminarJuego();
+=======
+>>>>>>> origin/master
         }
+    }
+
+    private IEnumerator PausarTimerTemporalmente()
+    {
+        enPausa = true;
+
+        if (timer != null)
+        {
+            timer.Pausar(true);
+            timer.CambiarColor(Color.yellow);
+        }
+
+        Debug.Log($"⏸️ Timer pausado por {duracionPausa} s (gatos limpios: {gatosLimpiosActual})");
+
+        yield return new WaitForSeconds(duracionPausa);
+
+        if (timer != null)
+        {
+            timer.Pausar(false);
+            timer.CambiarColor(Color.white);
+        }
+
+        Debug.Log("▶️ Timer reanudado");
+        enPausa = false;
     }
 
     void ActualizarContador()
     {
         if (this.contadorTxt != null)
         {
+<<<<<<< HEAD
             int gatosLimpios = this.gatosTotales - this.gatosRestantes;
             this.contadorTxt.text = string.Format("Cats Cleaned: {0}/{1}", gatosLimpios, this.gatosTotales);
+=======
+            int gatosLimpios = gatosTotales - gatosRestantes;
+            contadorTxt.text = $"Cats Cleaned: {gatosLimpios}";
+>>>>>>> origin/master
         }
-    }
-
-    private void Update()
-    {
-        /*void Update()
-        {
-            if (!corriendo) return;
-
-            tiempo += Time.deltaTime;
-
-            if (timerTxt != null)
-                timerTxt.text = "Tiempo: " + tiempo.ToString("F2") + "s";
-        }*/
-
-
-
-        //puntosTxt.text = "Points: " + puntos;
-        //tiempoTxt.text = "Time: " + Mathf.Ceil(tiempoRestante);
     }
 
     public void SumarPuntos(int cantidad)
@@ -149,6 +216,7 @@ public class GameManager : MonoBehaviour
 
         nivel = SceneManager.GetActiveScene().name;
     }
+
     public void MoverJugador()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
