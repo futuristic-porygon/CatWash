@@ -6,13 +6,15 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenu;
     public static bool isPaused;
 
-    void Start()
+    private void Awake()
     {
+        DontDestroyOnLoad(this.gameObject);
         pauseMenu.SetActive(false);
         Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked; 
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
+    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -48,6 +50,7 @@ public class PauseMenu : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
+        
     }
 
     public void ExitGame()

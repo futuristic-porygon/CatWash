@@ -38,6 +38,13 @@ public class GameManager : MonoBehaviour
     private float tiempoRestante;
     private int puntos = 0;
 
+    public int limiteGatosLogro = 10;
+    public GameObject canvasLogros;
+    public TextMeshProUGUI textoLogros;
+    public bool logroDesbloqueado = false;
+    public bool canvasVisible = false;
+    public string mensajeDefault;
+
     // 🔹 Variables nuevas
     [Header("Control de pausa por gatos limpios")]
     public int gatosPorPausa = 5;        // Cada cuántos gatos limpios se pausa el timer
@@ -98,6 +105,11 @@ public class GameManager : MonoBehaviour
         if (!enPausa && gatosLimpiosActual % gatosPorPausa == 0)
         {
             StartCoroutine(PausarTimerTemporalmente());
+        }
+
+        if (gatosLimpiosActual >= this.limiteGatosLogro)
+        {
+            this.DesbloquearLogroContador();
         }
 
         if (gatosRestantes <= 0)
@@ -175,5 +187,47 @@ public class GameManager : MonoBehaviour
     public void ReiniciarEscena()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void DesbloquearLogroContador()
+    {
+
+        if (this.logroDesbloqueado)
+        {
+            return;
+        }
+
+        this.logroDesbloqueado = true;
+
+        this.ActualizarTextoLogros();
+
+        if (this.canvasLogros != null)
+        {
+            this.canvasLogros.SetActive(true);
+            this.canvasVisible = true;
+
+            Invoke("OcultarCanvasLogros", 5f);
+        }
+
+    }
+
+    public void OcultarCanvasLogros()
+    {
+        if (this.canvasLogros != null)
+        {
+            this.canvasLogros.SetActive(false);
+            this.canvasVisible = false;
+        }
+    }
+
+    public void ActualizarTextoLogros()
+    {
+        if (this.textoLogros != null)
+        {
+            if (this.logroDesbloqueado)
+            {
+                this.textoLogros.text = this.mensajeDefault;
+            }
+        }
     }
 }
