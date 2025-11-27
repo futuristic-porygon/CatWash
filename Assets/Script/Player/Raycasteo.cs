@@ -50,7 +50,7 @@ public class Raycasteo : MonoBehaviour
     {
         if (sinMunicion) return;
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
         {
             Physics.Raycast(shootPoint.position, transform.forward, out hit, 100);
             if (hit.transform != null)
@@ -69,7 +69,7 @@ public class Raycasteo : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(0))
         {
             if (currentAmmo > 0)
             {

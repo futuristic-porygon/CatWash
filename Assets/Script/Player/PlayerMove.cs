@@ -37,6 +37,9 @@ public class PlayerMove : MonoBehaviour
 
     AudioManager audioManager;
 
+    static public bool dialogue = false;
+
+
     private void Awake()
     {
         audioManager =GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
@@ -47,46 +50,51 @@ public class PlayerMove : MonoBehaviour
 
     private void Update()
     {
-        // Cambio de velocidad
-        velocidadActual = Input.GetKey(KeyCode.LeftShift) ? velocidadRapida : velocidadNormal;
-
-        // Movimiento horizontal
-        movx = Input.GetAxis("Horizontal") * velocidadActual * Time.deltaTime;
-        movz = Input.GetAxis("Vertical") * velocidadActual * Time.deltaTime;
-        Vector3 movimiento = transform.right * movx + transform.forward * movz;
-        charCtrl.Move(movimiento);
-
-        // Ground check
-        isGrounded = Physics.CheckSphere(groundCheck.position, radio, whatIsGround);
-        if (isGrounded && veloY.y < 0) veloY.y = 0f;
-
-        // Salto normal
-        if (isGrounded && Input.GetKeyDown(KeyCode.Space))
-            veloY.y = Mathf.Sqrt(fuerzaSalto * -2f * gravity);
-           
-
-        // Detectar jetpack
-        if (Input.GetKeyDown(KeyCode.Space)) isHoldingSpace = true;
-        if (Input.GetKeyUp(KeyCode.Space)) isHoldingSpace = false;
-
-        // Recarga de combustible
-        if (!isHoldingSpace && fuel < 100f)
+        if (!dialogue)
         {
-            fuelRefillTimer += Time.deltaTime;
-            if (fuelRefillTimer >= fuelRefillDelay)
+            // Cambio de velocidad
+            velocidadActual = Input.GetKey(KeyCode.LeftShift) ? velocidadRapida : velocidadNormal;
+
+            // Movimiento horizontal
+            movx = Input.GetAxis("Horizontal") * velocidadActual * Time.deltaTime;
+            movz = Input.GetAxis("Vertical") * velocidadActual * Time.deltaTime;
+            Vector3 movimiento = transform.right * movx + transform.forward * movz;
+            charCtrl.Move(movimiento);
+
+            // Ground check
+            isGrounded = Physics.CheckSphere(groundCheck.position, radio, whatIsGround);
+            if (isGrounded && veloY.y < 0) veloY.y = 0f;
+
+            // Salto normal
+            if (isGrounded && Input.GetKeyDown(KeyCode.Space))
+                veloY.y = Mathf.Sqrt(fuerzaSalto * -2f * gravity);
+
+
+            // Detectar jetpack
+            if (Input.GetKeyDown(KeyCode.Space)) isHoldingSpace = true;
+            if (Input.GetKeyUp(KeyCode.Space)) isHoldingSpace = false;
+
+            // Recarga de combustible
+            if (!isHoldingSpace && fuel < 100f)
             {
-                fuel += fuelRefillRate * Time.deltaTime;
-                fuel = Mathf.Clamp(fuel, 0f, 100f);
+                fuelRefillTimer += Time.deltaTime;
+                if (fuelRefillTimer >= fuelRefillDelay)
+                {
+                    fuel += fuelRefillRate * Time.deltaTime;
+                    fuel = Mathf.Clamp(fuel, 0f, 100f);
+                }
+            }
+            else
+            {
+                fuelRefillTimer = 0f;
             }
         }
-        else
-        {
-            fuelRefillTimer = 0f;
-        }
+       
     }
 
     private void FixedUpdate()
     {
+        
         // Jetpack
         if (isHoldingSpace && fuel > 0f && transform.position.y < heightLimit)
         {

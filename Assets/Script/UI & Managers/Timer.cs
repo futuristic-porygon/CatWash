@@ -33,7 +33,14 @@ public class Timer : MonoBehaviour
     public void Pausar(bool estado)
     {
         isPaused = estado;
+
         Debug.Log($"⏱️ Timer {(estado ? "pausado" : "reanuda")}");
+
+        if (!estado)
+        {
+            // 🔹 Avisar al Spawner que suba el límite
+            Object.FindAnyObjectByType<Spawner>()?.AumentarLimiteSimultaneo();
+        }
     }
 
     public void CambiarColor(Color c)

@@ -4,46 +4,105 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
-    [Header("Configuración del Spawner")]
+    [Header("Prefab del gato")]
     public GameObject gatoPrefab;
-    public int maxGatos = 20;
-    public float spawnInterval = 2f;
 
-    private List<GameObject> listaGatos = new List<GameObject>();
-    private int contador = 0;
+    [Header("Spawn simultáneo")]
+    public int maxSimultaneos = 10;       // Límite actual
+    public int aumentoAlReanudar = 5;    // Aumenta +5 cuando Timer se reanuda
+
+    [Header("Intervalo de spawn")]
+    public float intervaloSpawn = 2f;     // Spawnea 1 cada cierto tiempo
+
+    [Header("Rango de Spawn (relativo al Spawner)")]
+    public Vector2 rangoX = new Vector2(-16, 13);
+    public Vector2 rangoZ = new Vector2(-20, 1);
+
+    [Header("Validación de Terreno")]
+    public LayerMask groundMask;
+    public float alturaRaycast = 10f;
+    public float distanciaRaycast = 50f;
+    [Range(0f, 60f)]
+    public float maxAnguloInclinacion = 20f;
+
+    private List<GameObject> gatosVivos = new List<GameObject>();
+    private bool puedeSpawnear = true;
 
     void Start()
     {
-        StartCoroutine(SpawnGatos());
+        StartCoroutine(ControlSpawn());
     }
 
-    private IEnumerator SpawnGatos()
+    private IEnumerator ControlSpawn()
     {
-        while (contador < maxGatos)
+        while (true)
         {
-            // 🔹 Posiciones aleatorias dentro de los rangos definidos
-            int xPos = Random.Range(-16, 13);
-            int zPos = Random.Range(-20, 1);
-
-            GameObject gato = Instantiate(gatoPrefab, new Vector3(xPos, 0, zPos), Quaternion.identity);
-
-            listaGatos.Add(gato);
-
-            // 🔹 Limpieza automática de referencia cuando el gato se destruye
-            StartCoroutine(RemoverGatoAlDestruir(gato));
-
-            contador++;
-            yield return new WaitForSeconds(spawnInterval);
+            // Si hay menos gatos del límite → spawn uno
+            if (puedeSpawnear && gatosVivos.Count < maxSimultaneos)
+            {
+                SpawnearSiHaySuelo();
+                yield return new WaitForSeconds(intervaloSpawn);
+            }
+            else
+            {
+                yield return null;
+            }
         }
     }
 
-    private IEnumerator RemoverGatoAlDestruir(GameObject gato)
+    private void SpawnearSiHaySuelo()
+    {
+        float xPos = Random.Range(rangoX.x, rangoX.y);
+        float zPos = Random.Range(rangoZ.x, rangoZ.y);
+
+        Vector3 basePos = transform.position + new Vector3(xPos, 0, zPos);
+
+        if (Physics.Raycast(basePos + Vector3.up * alturaRaycast, Vector3.down, out RaycastHit hit, distanciaRaycast, groundMask))
+        {
+            if (Vector3.Angle(hit.normal, Vector3.up) <= maxAnguloInclinacion)
+            {
+                GameObject gato = Instantiate(gatoPrefab, hit.point, Quaternion.identity);
+                gatosVivos.Add(gato);
+
+                // 🔹 Remover automáticamente cuando desaparezca
+                StartCoroutine(RemoverCuandoMuera(gato));
+            }
+        }
+    }
+
+    private IEnumerator RemoverCuandoMuera(GameObject gato)
     {
         while (gato != null)
-        {
             yield return null;
-        }
 
-        listaGatos.Remove(gato);
+        gatosVivos.Remove(gato);
+    }
+
+    // 🔹 Aumentar límite cuando Timer reanuda
+    public void AumentarLimiteSimultaneo()
+    {
+        maxSimultaneos += aumentoAlReanudar;
+        Debug.Log($"Nuevo límite de gatos simultáneos: {maxSimultaneos}");
+    }
+
+    // 🔹 Gizmo (igual que antes)
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(1, 0, 0, 0.25f);
+
+        float width = rangoX.y - rangoX.x;
+        float depth = rangoZ.y - rangoZ.x;
+
+        Vector3 center = transform.position + new Vector3(
+            (rangoX.x + rangoX.y) / 2f,
+            0,
+            (rangoZ.x + rangoZ.y) / 2f
+        );
+
+        Vector3 size = new Vector3(width, 0, depth);
+
+        Gizmos.DrawCube(center, size);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(center, size);
     }
 }

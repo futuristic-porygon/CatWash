@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 8.914303, y: 5, z: -21.86}
-  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
+  m_LocalScale: {x: 0.022, y: 0.022, z: 0.022}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9d972f6a74895d643b89dc7a23b8c998, type: 2}
+  - {fileID: 2100000, guid: 8184641a2b52fcb428b49de689dfa509, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -162,5 +162,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   suciedad: 60
-  limpioMat: {fileID: 2100000, guid: e748c057ab216e345816ca44a04cdc03, type: 2}
+  limpioMat: {fileID: 2100000, guid: 6553d0dad49eaef46852ef938b2a74a4, type: 2}
   tiempoAntesDeDestruir: 3

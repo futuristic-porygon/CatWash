@@ -4,11 +4,13 @@ using UnityEngine.SceneManagement;
 public class Settings : MonoBehaviour
 {
     public GameObject pauseMenu;
+    public GameObject controllerMenu;
     public static bool isPaused;
 
     void Start()
     {
         pauseMenu.SetActive(false);
+        controllerMenu.SetActive(false);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
@@ -26,5 +28,17 @@ public class Settings : MonoBehaviour
         Time.timeScale = 1f;
         isPaused = false;
     }
-
+    public void ResumeControllerGame()
+    {
+        controllerMenu.SetActive(false);
+        Time.timeScale = 1f;
+        isPaused = false;
+    }
+    public void ControllerMenu()
+    {
+        controllerMenu.SetActive(true);
+        pauseMenu.SetActive(false); 
+        Time.timeScale = 0f;
+        isPaused = true;
+    }
 }
