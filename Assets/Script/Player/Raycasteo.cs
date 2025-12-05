@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.UI; // 👈 necesario para usar Slider
+using UnityEngine.UI;
 using System.Collections;
 
 public class Raycasteo : MonoBehaviour
@@ -11,16 +11,18 @@ public class Raycasteo : MonoBehaviour
     private Transform shootPoint;
     private RaycastHit hit;
 
+    [Header("Bala")]
     [SerializeField] private Transform Bala;
     [SerializeField] private Transform shooter;
     [SerializeField] private float bolaVelo;
 
+    [Header("Munición")]
     public int maxAmmo = 10;
     private int currentAmmo;
     private bool sinMunicion = false;
 
     [Header("UI")]
-    [SerializeField] private Slider ammoBar; // 👈 referencia a la barra de munición
+    [SerializeField] private Image ammoFill; // 👉 barra de agua interna
 
     AudioManager audioManager;
 
@@ -28,31 +30,33 @@ public class Raycasteo : MonoBehaviour
     {
         audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
     }
+
     private void Start()
     {
         shootPoint = transform.parent;
         currentAmmo = maxAmmo;
 
-        if (ammoBar != null)
-        {
-            ammoBar.maxValue = maxAmmo;
-            ammoBar.value = currentAmmo;
-        }
+        if (ammoFill != null)
+            ammoFill.fillAmount = 1f; // lleno al iniciar
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         sinMunicion = false;
-        if (ammoBar != null) ammoBar.value = currentAmmo;
+
+        if (ammoFill != null)
+            ammoFill.fillAmount = (float)currentAmmo / maxAmmo;
     }
 
     void Update()
     {
         if (sinMunicion) return;
 
+        // Clic derecho → Raycast (empujar)
         if (Input.GetMouseButtonDown(1))
         {
             Physics.Raycast(shootPoint.position, transform.forward, out hit, 100);
+
             if (hit.transform != null)
             {
                 Debug.Log(hit.transform.name);
@@ -69,48 +73,48 @@ public class Raycasteo : MonoBehaviour
             }
         }
 
+        // Clic izquierdo → Disparar
         if (Input.GetMouseButtonDown(0))
         {
             if (currentAmmo > 0)
             {
                 Transform clone = Instantiate(Bala, shooter.position, shooter.rotation);
                 clone.GetComponent<Rigidbody>().AddForce(transform.forward * bolaVelo);
+
                 audioManager.PlaySFX(audioManager.weapon);
 
-                if (hit.collider != null && hit.collider.CompareTag("Enemigo"))
-                {
-                    hit.collider.GetComponent<Gato>()?.Limpiar(poderLimpieza * Time.deltaTime * 20);
-                }
-
                 currentAmmo--;
-                ActualizarBarra(); // 👈 actualiza la barra
+                ActualizarBarra();
 
                 if (currentAmmo <= 0)
                 {
                     sinMunicion = true;
-                    Debug.Log("Sin munición. Dirígete a una estación de recarga.");
+                    //Debug.Log("Sin munición. Dirígete a una estación de recarga.");
                 }
             }
             else
             {
-                Debug.Log("No puedes disparar. Necesitas recargar en una estación.");
+                //Debug.Log("No puedes disparar. Necesitas recargar en una estación.");
             }
         }
     }
 
-    // 🔄 Método para actualizar la barra de munición
+    
     private void ActualizarBarra()
     {
-        if (ammoBar != null)
-            ammoBar.value = currentAmmo;
+        if (ammoFill != null)
+            ammoFill.fillAmount = Mathf.Clamp01((float)currentAmmo / maxAmmo);
     }
 
-    // 🔋 Método llamado por la estación de recarga
+    
     public void RecargarDesdeEstacion()
     {
         currentAmmo = maxAmmo;
         sinMunicion = false;
-        Debug.Log("Munición restaurada desde estación de recarga.");
-        ActualizarBarra(); // 👈 actualiza también al recargar
+
+        if (ammoFill != null)
+            ammoFill.fillAmount = 1f;
+
+        //Debug.Log("Munición restaurada desde estación de recarga.");
     }
 }

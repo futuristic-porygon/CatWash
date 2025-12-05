@@ -3,8 +3,8 @@
 public class Jetpack : MonoBehaviour
 {
     [Header("Configuración del Jetpack")]
-    public float jetpackForce = 5f;      // Fuerza de empuje vertical
-    public float heightLimit = 11.5f;    // Altura máxima permitida
+    public float jetpackForce = 5f;
+    public float heightLimit = 11.5f;
 
     [Header("Combustible")]
     public float fuel = 100f;
@@ -13,48 +13,41 @@ public class Jetpack : MonoBehaviour
     public float fuelRefillDelay = 2f;
 
     [Header("UI")]
-    public FuelDisplay fuelDisplay;      // Referencia a la barra de combustible
+    public FuelDisplay fuelDisplay;
 
     private PlayerMove playerMove;
     private bool isHoldingSpace = false;
     private float fuelRefillTimer = 0f;
 
+    public bool jetpackUnlocked = false;
+
     void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
+
         if (playerMove == null)
-            Debug.LogError("⚠️ PlayerMove no encontrado en el mismo GameObject.");
-
-        if (fuelDisplay == null)
-            Debug.LogError("⚠️ FuelDisplay no asignado en el Inspector.");
-    }
-
-    void Start()
-    {
-        // Actualizar barra inicial
-        if (fuelDisplay != null)
-            fuelDisplay.SetFuelLevel(fuel, 100f);
+            Debug.LogError("PlayerMove no encontrado");
     }
 
     void Update()
     {
-        // Detectar input del jetpack
+        // Input jetpack
         if (Input.GetKeyDown(KeyCode.Space))
             isHoldingSpace = true;
         if (Input.GetKeyUp(KeyCode.Space))
             isHoldingSpace = false;
 
-        // Recarga de combustible cuando no se usa
+        // Recargar combustible
         if (!isHoldingSpace && fuel < 100f)
         {
             fuelRefillTimer += Time.deltaTime;
+
             if (fuelRefillTimer >= fuelRefillDelay)
             {
                 fuel += fuelRefillRate * Time.deltaTime;
-                fuel = Mathf.Clamp(fuel, 0f, 100f);
+                fuel = Mathf.Clamp(fuel, 0, 100);
 
-                if (fuelDisplay != null)
-                    fuelDisplay.SetFuelLevel(fuel, 100f);
+                fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
         }
         else
@@ -63,25 +56,34 @@ public class Jetpack : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
+        if (!jetpackUnlocked) return; // 🛑 No usar jetpack hasta estar desbloqueado
+
         if (isHoldingSpace && fuel > 0f)
         {
-            // Aplicar empuje solo si no se supera la altura máxima
             if (transform.position.y < heightLimit)
             {
                 playerMove.veloY.y = jetpackForce;
 
                 fuel -= fuelDecreaseRate * Time.fixedDeltaTime;
-                fuel = Mathf.Clamp(fuel, 0f, 100f);
+                fuel = Mathf.Clamp(fuel, 0, 100);
 
-                if (fuelDisplay != null)
-                    fuelDisplay.SetFuelLevel(fuel, 100f);
+                fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
             else
             {
                 playerMove.veloY.y = 0f;
+
+                fuel -= fuelDecreaseRate * Time.fixedDeltaTime;
+                fuel = Mathf.Clamp(fuel, 0, 100);
+
+                fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
         }
+    }
+    public void SetJetpackState(bool state)
+    {
+        jetpackUnlocked = state;
     }
 }

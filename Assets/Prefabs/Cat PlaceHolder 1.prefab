@@ -160,3 +160,4 @@ MonoBehaviour:
   suciedad: 60
   limpioMat: {fileID: 2100000, guid: 371a4b6d876384d47acc03e409bd55d3, type: 2}
   tiempoAntesDeDestruir: 3
+  particulasImpacto: {fileID: 4978076440542138351, guid: 8614433f050b6c3459c613c26ddcf1ac, type: 3}

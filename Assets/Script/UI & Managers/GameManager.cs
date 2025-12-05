@@ -38,19 +38,36 @@ public class GameManager : MonoBehaviour
     private float tiempoRestante;
     private int puntos = 0;
 
+    // --------------------------
+    // LOGRO GENERAL (ya existente)
     public int limiteGatosLogro = 10;
     public GameObject canvasLogros;
     public TextMeshProUGUI textoLogros;
     public bool logroDesbloqueado = false;
     public bool canvasVisible = false;
     public string mensajeDefault;
+    // --------------------------
 
-    // 🔹 Variables nuevas
+    // --------------------------
+    // 🟦 NUEVO: LOGRO JETPACK
+    [Header("Logro Jetpack")]
+    public Animator jetpackPopupAnimator;              // Popup de 3 segundos
+    public int gatosParaJetpack = 20;
+    public bool jetpackDesbloqueado = false;
+
+    public Jetpack jetpack;                      // Referencia al script Jetpack
+    public GameObject barraCombustibleUI;        // UI de combustible (se oculta al inicio)
+    // --------------------------
+
+    // --------------------------
+    // PAUSA DEL TIMER
     [Header("Control de pausa por gatos limpios")]
-    public int gatosPorPausa = 5;        // Cada cuántos gatos limpios se pausa el timer
-    public float duracionPausa = 10f;    // Duración de la pausa en segundos
-    private int gatosLimpiosActual = 0;  // Contador interno de gatos limpios
+    public int gatosPorPausa = 5;
+    public float duracionPausa = 10f;
+
+    private int gatosLimpiosActual = 0;
     private bool enPausa = false;
+    // --------------------------
 
     private Timer timer;
 
@@ -71,7 +88,7 @@ public class GameManager : MonoBehaviour
     {
         tiempoRestante = tiempoTotal;
 
-        // Buscar gatos iniciales
+        // Buscar gatos al inicio
         Gato[] gatos = FindObjectsOfType<Gato>();
         gatosTotales = gatos.Length;
         gatosRestantes = gatosTotales;
@@ -81,6 +98,10 @@ public class GameManager : MonoBehaviour
         if (panelVictoria != null)
             panelVictoria.SetActive(false);
 
+        if (barraCombustibleUI != null)
+            barraCombustibleUI.SetActive(false);   // Ocultar UI al inicio
+
+        
         StartCoroutine(EsperarYAsignarTimer());
     }
 
@@ -88,30 +109,30 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         timer = FindObjectOfType<Timer>();
-
-        if (timer == null)
-            Debug.LogWarning("⚠️ GameManager no encontró el Timer en la escena.");
-        else
-            Debug.Log("✅ Timer detectado correctamente por GameManager.");
     }
 
+    // --------------------------------------------
+    // CUANDO SE LIMPIA UN GATO
+    // --------------------------------------------
     public void GatoLimpio()
     {
         gatosRestantes--;
         gatosLimpiosActual++;
         ActualizarContador();
 
-        // 🔹 Verificar si toca pausar el timer
+        // PAUSA DEL TIMER
         if (!enPausa && gatosLimpiosActual % gatosPorPausa == 0)
-        {
             StartCoroutine(PausarTimerTemporalmente());
-        }
 
-        if (gatosLimpiosActual >= this.limiteGatosLogro)
-        {
-            this.DesbloquearLogroContador();
-        }
+        // LOGRO GENERAL
+        if (gatosLimpiosActual >= limiteGatosLogro)
+            DesbloquearLogroContador();
 
+        // 🟦 LOGRO JETPACK
+        if (!jetpackDesbloqueado && gatosLimpiosActual >= gatosParaJetpack)
+            DesbloquearJetpack();
+
+        // VICTORIA
         if (gatosRestantes <= 0)
         {
             if (panelVictoria != null)
@@ -129,8 +150,6 @@ public class GameManager : MonoBehaviour
             timer.CambiarColor(Color.yellow);
         }
 
-        Debug.Log($"⏸️ Timer pausado por {duracionPausa} s (gatos limpios: {gatosLimpiosActual})");
-
         yield return new WaitForSeconds(duracionPausa);
 
         if (timer != null)
@@ -139,7 +158,6 @@ public class GameManager : MonoBehaviour
             timer.CambiarColor(Color.white);
         }
 
-        Debug.Log("▶️ Timer reanudado");
         enPausa = false;
     }
 
@@ -152,82 +170,69 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SumarPuntos(int cantidad)
-    {
-        puntos += cantidad;
-    }
-
-    public void MandarAGuardar()
-    {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-
-        posicionX = player.position.x;
-        posicionY = player.position.y;
-        posicionZ = player.position.z;
-
-        nivel = SceneManager.GetActiveScene().name;
-    }
-
-    public void MoverJugador()
-    {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        player.GetComponent<CharacterController>().enabled = false;
-        player.position = new Vector3(GameManager.Instance.posicionX, GameManager.Instance.posicionY, GameManager.Instance.posicionZ);
-        player.GetComponent<CharacterController>().enabled = true;
-    }
-
-    public void MostrarPantallaVictoria(float tiempoFinal)
-    {
-        if (panelVictoria != null) panelVictoria.SetActive(true);
-        if (victoriaTxt != null)
-            victoriaTxt.text = "The cats have been cleaned \nTime: " + tiempoFinal.ToString("F2") + " s";
-        Time.timeScale = 0f;
-    }
-
-    public void ReiniciarEscena()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
+    // --------------------------------------------
+    // LOGRO GENERAL
+    // --------------------------------------------
     public void DesbloquearLogroContador()
     {
+        if (logroDesbloqueado) return;
 
-        if (this.logroDesbloqueado)
+        logroDesbloqueado = true;
+
+        ActualizarTextoLogros();
+
+        if (canvasLogros != null)
         {
-            return;
-        }
-
-        this.logroDesbloqueado = true;
-
-        this.ActualizarTextoLogros();
-
-        if (this.canvasLogros != null)
-        {
-            this.canvasLogros.SetActive(true);
-            this.canvasVisible = true;
+            canvasLogros.SetActive(true);
+            canvasVisible = true;
 
             Invoke("OcultarCanvasLogros", 5f);
-        }
-
-    }
-
-    public void OcultarCanvasLogros()
-    {
-        if (this.canvasLogros != null)
-        {
-            this.canvasLogros.SetActive(false);
-            this.canvasVisible = false;
         }
     }
 
     public void ActualizarTextoLogros()
     {
-        if (this.textoLogros != null)
+        if (textoLogros != null && logroDesbloqueado)
         {
-            if (this.logroDesbloqueado)
-            {
-                this.textoLogros.text = this.mensajeDefault;
-            }
+            textoLogros.text = mensajeDefault;
         }
     }
+
+    public void OcultarCanvasLogros()
+    {
+        if (canvasLogros != null)
+        {
+            canvasLogros.SetActive(false);
+            canvasVisible = false;
+        }
+    }
+
+    // --------------------------------------------
+    // 🟦🟦 DESBLOQUEAR JETPACK 🟦🟦
+    // --------------------------------------------
+    public void DesbloquearJetpack()
+    {
+        jetpackDesbloqueado = true;
+        barraCombustibleUI.SetActive(true);
+
+        if (jetpack != null)
+            jetpack.SetJetpackState(true);
+
+        Debug.Log("🚀 Jetpack desbloqueado!");
+
+        // 🔥 REPRODUCIR ANIMACIÓN
+        if (jetpackPopupAnimator != null)
+            jetpackPopupAnimator.SetTrigger("Mostrar");
+
+        // También mostrar texto de logro si quieres
+        if (!canvasVisible && canvasLogros != null)
+        {
+            textoLogros.text = "Jetpack Unlocked!";
+            canvasLogros.SetActive(true);
+            canvasVisible = true;
+
+            Invoke(nameof(OcultarCanvasLogros), 5f);
+        }
+    }
+
 }

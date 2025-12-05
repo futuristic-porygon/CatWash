@@ -145,8 +145,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7279e3a15dea7549aca23a4518bce70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rangoDeteccion: 10
-  distanciaParada: 2
+  rangoDeteccion: 15
+  distanciaParada: 5
   velocidadNormal: 3
   rotacionSuavizada: 8
 --- !u!114 &7641156593622153831
@@ -164,3 +164,4 @@ MonoBehaviour:
   suciedad: 60
   limpioMat: {fileID: 2100000, guid: 6553d0dad49eaef46852ef938b2a74a4, type: 2}
   tiempoAntesDeDestruir: 3
+  particulasImpacto: {fileID: 4978076440542138351, guid: 8614433f050b6c3459c613c26ddcf1ac, type: 3}
