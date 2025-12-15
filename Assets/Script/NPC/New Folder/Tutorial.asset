@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e5712bb71e3a6548b767c3e23438cd6, type: 3}
+  m_Name: Tutorial
+  m_EditorClassIdentifier: 
+  lines:
+  - "Oh! I see you\u2019re new around here. My name is Atsuko, nice to meet you"
+  - "Let me explain\u2014around here at night we wash kittens\u2026 It\u2019s a pretty
+    fun job, and I want you to learn how to do it."
+  - You could start by getting out of there and washing the kitten I have right behind
+    me
+  - What? Why is a cardboard box talking to you?
+  - "THAT DOESN\u2019T MATTER!"
+  - Left-click to throw a little bubble from your weapon. It might take a couple
+    balloons to clean it.
+  - "Now, note the red machines will help reload your weapon\u2014just get close
+    to one and it\u2019ll fill up like magic."
+  - "I\u2019m glad to hear you understood everything. "
+  - There`s been so many of them and they wont stop coming, can you help us getting
+    rid of them? We can take them to an adoption center, BUT FIRST...
+  - you can start with Bibble, my cat, look for him in the diner and try showering
+    him first, but be careful, cats hate water

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 
 public class Gato : MonoBehaviour
@@ -17,6 +17,9 @@ public class Gato : MonoBehaviour
     Rigidbody rb;
     UnityEngine.AI.NavMeshAgent agent;
 
+    // 👉 NUEVO: indicar si el gato pertenece al tutorial
+    public bool esTutorial = false;
+
     private void Awake()
     {
         audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
@@ -28,7 +31,7 @@ public class Gato : MonoBehaviour
 
     void Start()
     {
-        rend = GetComponent<Renderer>();
+        rend = GetComponentInChildren<Renderer>();
         transform.rotation = Quaternion.Euler(0f, 180f, 0f);
     }
 
@@ -43,19 +46,21 @@ public class Gato : MonoBehaviour
             limpio = true;
             rend.material = limpioMat;
 
-            // DETENER MOVIMIENTO
             DetenerMovimiento();
 
             if (particulasImpacto != null)
-            {
                 Instantiate(particulasImpacto, transform.position, transform.rotation);
-            }
-
-            if (GameManager.Instance != null)
-                GameManager.Instance.GatoLimpio();
 
             audioManager.PlaySFX(audioManager.clean);
-            ScoreManager.Instance.AddPoint();
+
+            // 👉 SOLO si NO es tutorial cuenta como gato limpiado
+            if (!esTutorial)
+            {
+                if (GameManager.Instance != null)
+                    GameManager.Instance.GatoLimpio();
+
+                ScoreManager.Instance.AddPoint();
+            }
 
             Destroy(gameObject, tiempoAntesDeDestruir);
         }
@@ -63,13 +68,12 @@ public class Gato : MonoBehaviour
 
     private void DetenerMovimiento()
     {
-        /* 1) SI EL GATO TIENE ANIMATOR
+        /*
+        // Si quieres desactivar animación cuando se limpia
         if (animator != null)
-        {
             animator.enabled = false;
-        }*/
+        */
 
-        // 3) SI USA NAVMESH
         if (agent != null)
         {
             agent.isStopped = true;

@@ -1,53 +1,124 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 using System.Collections;
 
 public class AmmoStation : MonoBehaviour
 {
-    [Header("Configuraci髇 de estaci髇 de recarga")]
+    [Header("Configuraci贸n estaci贸n")]
     public float tiempoRecarga = 2f;
+    public float cooldownRecarga = 3f;
     public bool recargaAutomatica = true;
 
+    [Header("Tipo de arma que recarga esta estaci贸n")]
+    public WeaponType tipoDeArma;
+
     private bool jugadorCerca = false;
-    private Raycasteo raycasteoJugador;
+    private bool enCooldown = false;
+
+    [Header("UI Popup")]
+    public GameObject popupUI;
+
+    private Raycasteo armaActual;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            jugadorCerca = true;
-            raycasteoJugador = other.GetComponentInChildren<Raycasteo>();
+        if (!other.CompareTag("Player")) return;
 
-            if (recargaAutomatica)
-                StartCoroutine(RecargarMunicion());
-            else
-                Debug.Log("Presiona 'E' para recargar.");
+        jugadorCerca = true;
+        ActualizarArmaActiva();
+
+        if (popupUI != null)
+            popupUI.SetActive(armaActual != null && armaActual.tipoArma == tipoDeArma);
+
+        if (armaActual == null || armaActual.tipoArma != tipoDeArma)
+        {
+            Debug.Log("Esta estaci贸n no recarga esta arma.");
+            return;
         }
+
+        if (recargaAutomatica && !enCooldown)
+            StartCoroutine(RecargarMunicion());
+        else if (!recargaAutomatica && !enCooldown)
+            Debug.Log("Presiona 'E' para recargar.");
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            jugadorCerca = false;
-            raycasteoJugador = null;
-        }
+        if (!other.CompareTag("Player")) return;
+
+        jugadorCerca = false;
+        armaActual = null;
+
+        StopAllCoroutines();
+        enCooldown = false;
+
+        if (popupUI != null)
+            popupUI.SetActive(false);
     }
 
     private void Update()
     {
-        if (!recargaAutomatica && jugadorCerca && Input.GetKeyDown(KeyCode.E))
-        {
+        if (!jugadorCerca) return;
+
+        ActualizarArmaActiva();
+
+        if (armaActual == null || armaActual.tipoArma != tipoDeArma) return;
+
+        if (!recargaAutomatica && !enCooldown && Input.GetKeyDown(KeyCode.E))
             StartCoroutine(RecargarMunicion());
-        }
     }
 
+    // ===========
+    // ENCUENTRA EL ARMA ACTIVA DEL WEAPONSWITCHER
+    // ===========
+    private void ActualizarArmaActiva()
+    {
+        var player = GameObject.FindWithTag("Player");
+        if (player == null) return;
+
+        var switcher = player.GetComponentInChildren<WeaponSwitcher>();
+        if (switcher == null) return;
+
+        for (int i = 0; i < switcher.transform.childCount; i++)
+        {
+            Transform arma = switcher.transform.GetChild(i);
+
+            if (arma.gameObject.activeSelf)
+            {
+                armaActual = arma.GetComponentInChildren<Raycasteo>();
+                return;
+            }
+        }
+
+        armaActual = null;
+    }
+
+    // ===========
+    // COROUTINE SEGURA (SIN NULLREFERENCE)
+    // ===========
     private IEnumerator RecargarMunicion()
     {
-        if (raycasteoJugador == null) yield break;
+        if (armaActual == null || enCooldown) yield break;
 
-        Debug.Log("Recargando en estaci髇...");
+        Raycasteo armaARecargar = armaActual; // copia estable
+        enCooldown = true;
+
+        Debug.Log("Recargando...");
         yield return new WaitForSeconds(tiempoRecarga);
 
-        raycasteoJugador.RecargarDesdeEstacion();
+        if (armaARecargar == null)
+        {
+            Debug.Log("Recarga cancelada: el arma cambi贸.");
+            enCooldown = false;
+            yield break;
+        }
+
+        armaARecargar.RecargarDesdeEstacion();
+        Debug.Log("隆Recarga completa!");
+
+        yield return new WaitForSeconds(cooldownRecarga);
+        enCooldown = false;
+
+        if (!recargaAutomatica)
+            Debug.Log("Presiona 'E' para recargar de nuevo.");
     }
 }

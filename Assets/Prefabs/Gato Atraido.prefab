@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41edd5b8865174445969a5b897c11d5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  suciedad: 60
+  suciedad: 30
   limpioMat: {fileID: 2100000, guid: 6553d0dad49eaef46852ef938b2a74a4, type: 2}
   tiempoAntesDeDestruir: 3
   particulasImpacto: {fileID: 4978076440542138351, guid: 8614433f050b6c3459c613c26ddcf1ac, type: 3}

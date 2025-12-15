@@ -1015,11 +1015,9 @@ GameObject:
   - component: {fileID: 8672163009909427761}
   - component: {fileID: 7649624332189569012}
   - component: {fileID: 5514153474878026873}
-  - component: {fileID: 7959248519694023630}
   - component: {fileID: 3079205095443121514}
   - component: {fileID: 1818045816351900651}
   - component: {fileID: 7710979201060446245}
-  - component: {fileID: 6606295973078778538}
   m_Layer: 5
   m_Name: UIManager
   m_TagString: Untagged
@@ -1110,20 +1108,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &7959248519694023630
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109469210174211819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96dcac5e5717e1f4e8bfdb6c5c9abb4c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxCount: 9
-  filename: highscores.json
 --- !u!114 &3079205095443121514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1149,6 +1133,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4361919c66d61c242bfe8974df90b85a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  botonSFX: {fileID: 0}
 --- !u!114 &7710979201060446245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1162,20 +1147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pauseMenu: {fileID: 5924979975778816784}
---- !u!114 &6606295973078778538
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109469210174211819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 245580cdf44a66143ac4f21c46561df2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scoreText: {fileID: 5647063097412291944}
-  highScoreText: {fileID: 2733025714609465943}
+  controllerMenu: {fileID: 0}
 --- !u!1 &2144463733593744244
 GameObject:
   m_ObjectHideFlags: 0

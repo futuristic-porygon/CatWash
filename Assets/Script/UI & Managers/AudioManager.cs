@@ -1,27 +1,50 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-    [Header("-------Audio Source-------")]
-    [SerializeField] AudioSource musicSource;
-    [SerializeField] AudioSource SFXSource;
+    public static AudioManager Instance;
 
-    [Header("-------Audio Clip-------")]
+    [Header("-------Audio Sources-------")]
+    [SerializeField] public AudioSource musicSource;
+    [SerializeField] public AudioSource SFXSource;
+    [SerializeField] public AudioSource loopSource;   // ✅ NUEVO PARA JETPACK
+
+    [Header("-------Audio Clips-------")]
     public AudioClip background;
     public AudioClip clean;
     public AudioClip weapon;
     public AudioClip weaponChage;
-    public AudioClip recharge;
+    public AudioClip rechargeRojo;
+    public AudioClip rechargeVerde;
+    public AudioClip rechargeAzul;
+    public AudioClip Fin;
+    public AudioClip Jetpack;
+    public AudioClip Charco;
+    public AudioClip Boost;
+    public AudioClip Sprint;
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {
-        musicSource.clip = background;
-        musicSource.Play();
+        if (background != null)
+        {
+            musicSource.clip = background;
+            musicSource.Play();
+        }
     }
 
     public void PlaySFX(AudioClip clip)
     {
-        SFXSource.PlayOneShot(clip);
+        if (clip != null)
+            SFXSource.PlayOneShot(clip);
     }
 
+    public void StopMusic()
+    {
+        if (musicSource != null)
+            musicSource.Stop();
+    }
 }

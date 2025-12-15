@@ -1,4 +1,4 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
@@ -7,11 +7,13 @@ public class GatoAtraido : MonoBehaviour
     private NavMeshAgent agente;
     private Transform jugador;
 
-    [Header("Par·metros de atracciÛn")]
-    public float rangoDeteccion = 10f;   // Distancia m·xima a la que detecta al jugador
-    public float distanciaParada = 2f;   // QuÈ tan cerca se acerca antes de detenerse
-    public float velocidadNormal = 3f;   // Velocidad al moverse hacia el jugador
-    public float rotacionSuavizada = 8f; // QuÈ tan r·pido gira hacia el jugador
+    public Animator anim; // ‚Üê ahora es p√∫blico igual que en el otro gato
+
+    [Header("Par√°metros de atracci√≥n")]
+    public float rangoDeteccion = 10f;
+    public float distanciaParada = 2f;
+    public float velocidadNormal = 3f;
+    public float rotacionSuavizada = 8f;
 
     private bool siguiendoJugador = false;
 
@@ -19,16 +21,16 @@ public class GatoAtraido : MonoBehaviour
     {
         agente = GetComponent<NavMeshAgent>();
 
-        // Buscar al jugador autom·ticamente por tag
+        // Obtener Animator si no fue asignado en el Inspector
+        if (anim == null)
+            anim = GetComponent<Animator>();
+
+        // Buscar jugador
         GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
         if (jugadorObj != null)
-        {
             jugador = jugadorObj.transform;
-        }
         else
-        {
-            Debug.LogWarning($"[{name}] No se encontrÛ un objeto con tag 'Player'. El gato no podr· acercarse.");
-        }
+            Debug.LogWarning($"[{name}] No se encontr√≥ un Player. El gato no podr√° acercarse.");
 
         agente.speed = velocidadNormal;
         agente.stoppingDistance = distanciaParada;
@@ -42,35 +44,37 @@ public class GatoAtraido : MonoBehaviour
 
         if (distancia <= rangoDeteccion && distancia > distanciaParada)
         {
-            // Se acerca al jugador
             siguiendoJugador = true;
             agente.isStopped = false;
             agente.SetDestination(jugador.position);
         }
-        else if (distancia <= distanciaParada)
-        {
-            // Se detiene cerca del jugador
-            siguiendoJugador = false;
-            agente.isStopped = true;
-        }
         else
         {
-            // Jugador fuera de rango
             siguiendoJugador = false;
             agente.isStopped = true;
         }
 
-        // RotaciÛn suave hacia el jugador si lo est· siguiendo
+        // Rotaci√≥n suave hacia el jugador
         if (siguiendoJugador)
         {
-            Vector3 direccion = (jugador.position - transform.position).normalized;
-            direccion.y = 0f;
+            Vector3 dir = (jugador.position - transform.position).normalized;
+            dir.y = 0;
 
-            if (direccion.sqrMagnitude > 0.001f)
+            if (dir.sqrMagnitude > 0.01f)
             {
-                Quaternion rotDeseada = Quaternion.LookRotation(direccion);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotDeseada, Time.deltaTime * rotacionSuavizada);
+                Quaternion rot = Quaternion.LookRotation(dir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * rotacionSuavizada);
             }
         }
+
+        ActualizarAnimacion();
+    }
+
+    void ActualizarAnimacion()
+    {
+        float velocidad = new Vector3(agente.velocity.x, 0, agente.velocity.z).magnitude;
+        bool estaCaminando = velocidad > 0.1f;
+
+        anim.SetBool("isWalking", estaCaminando);
     }
 }

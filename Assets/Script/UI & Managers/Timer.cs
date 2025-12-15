@@ -8,6 +8,15 @@ public class Timer : MonoBehaviour
     [SerializeField] private float remainingTime = 60f;
 
     private bool isPaused = false;
+    private bool soundPlayed = false; // 🔥 evita duplicado del sonido
+
+    private Color colorOriginal;
+
+    void Start()
+    {
+        if (timerText != null)
+            colorOriginal = timerText.color;
+    }
 
     void Update()
     {
@@ -19,13 +28,21 @@ public class Timer : MonoBehaviour
         }
         else if (remainingTime <= 0)
         {
-            remainingTime = 0;
-            GameOver();
-            timerText.color = Color.red;
+            remainingTime = 0f;
+
+            if (!soundPlayed)
+            {
+                soundPlayed = true;
+                GameOver();
+            }
+
+            if (timerText != null)
+                timerText.color = Color.red;
         }
 
         int minutes = Mathf.FloorToInt(remainingTime / 60);
         int seconds = Mathf.FloorToInt(remainingTime % 60);
+
         if (timerText != null)
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
@@ -34,11 +51,17 @@ public class Timer : MonoBehaviour
     {
         isPaused = estado;
 
-        Debug.Log($"⏱️ Timer {(estado ? "pausado" : "reanuda")}");
+        Debug.Log($"⏱️ Timer {(estado ? "pausado" : "reiniciado")}");
+
+        if (estado)
+        {
+            // Popup notificando pausa
+            GameManager.Instance?.MostrarPopupTimer();
+        }
 
         if (!estado)
         {
-            // 🔹 Avisar al Spawner que suba el límite
+            // Avisar al Spawner
             Object.FindAnyObjectByType<Spawner>()?.AumentarLimiteSimultaneo();
         }
     }
@@ -49,8 +72,31 @@ public class Timer : MonoBehaviour
             timerText.color = c;
     }
 
-    public void GameOver()
+    private void GameOver()
     {
-        SceneManager.LoadScene("Main Menu");
+        // 🎵 Detener música
+        AudioManager.Instance?.StopMusic();
+
+        // 🔊 Reproducir sonido de fin
+        AudioManager.Instance?.PlaySFX(AudioManager.Instance.Fin);
+
+        // ⏳ Esperar antes de cambiar de escena
+        StartCoroutine(GameOverDelay());
+    }
+
+    private System.Collections.IEnumerator GameOverDelay()
+    {
+        yield return new WaitForSeconds(3f);
+
+        Debug.Log("Score final: " + ScoreManager.Instance.GetScore());
+
+        ScoreManager.Instance?.SaveScore();
+
+        SceneManager.LoadScene("Victoria");
+    }
+    public void ReiniciarColor()
+    {
+        if (timerText != null)
+            timerText.color = colorOriginal;
     }
 }

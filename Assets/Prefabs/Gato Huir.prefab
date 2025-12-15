@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 2951759509614035732}
   - component: {fileID: 737011245250322283}
   - component: {fileID: 213963364549619811}
-  - component: {fileID: 4256107391009070417}
   - component: {fileID: 868392376751239630}
+  - component: {fileID: 4256107391009070417}
   m_Layer: 0
   m_Name: Gato Huir
   m_TagString: Enemigo
@@ -133,6 +133,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 43.190178, y: 98.29182, z: 171.65637}
   m_Center: {x: 0, y: 48.350864, z: -10.765091}
+--- !u!114 &868392376751239630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942118901098911899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba682c7abbcb374a9553f920a0cf1f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rangoHuida: 15
+  distanciaSegura: 30
+  distanciaHuida: 5
+  velocidadNormal: 2
+  velocidadHuida: 10
+  rotacionSuavizada: 8
 --- !u!114 &4256107391009070417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,21 +167,3 @@ MonoBehaviour:
   limpioMat: {fileID: 2100000, guid: a7bf3faea1cb86e479f9a3cca41c113f, type: 2}
   tiempoAntesDeDestruir: 3
   particulasImpacto: {fileID: 4978076440542138351, guid: 8614433f050b6c3459c613c26ddcf1ac, type: 3}
---- !u!114 &868392376751239630
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6942118901098911899}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ba682c7abbcb374a9553f920a0cf1f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rangoHuida: 5
-  distanciaSegura: 10
-  distanciaHuida: 8
-  velocidadNormal: 2
-  velocidadHuida: 5
-  rotacionSuavizada: 8

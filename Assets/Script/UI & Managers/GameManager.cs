@@ -36,56 +36,90 @@ public class GameManager : MonoBehaviour
     public float tiempoTotal = 60f;
 
     private float tiempoRestante;
-    private int puntos = 0;
 
-    // --------------------------
-    // LOGRO GENERAL (ya existente)
     public int limiteGatosLogro = 10;
     public GameObject canvasLogros;
     public TextMeshProUGUI textoLogros;
     public bool logroDesbloqueado = false;
     public bool canvasVisible = false;
     public string mensajeDefault;
-    // --------------------------
 
-    // --------------------------
-    // 🟦 NUEVO: LOGRO JETPACK
     [Header("Logro Jetpack")]
-    public Animator jetpackPopupAnimator;              // Popup de 3 segundos
+    public Animator jetpackPopupAnimator;
     public int gatosParaJetpack = 20;
     public bool jetpackDesbloqueado = false;
 
-    public Jetpack jetpack;                      // Referencia al script Jetpack
-    public GameObject barraCombustibleUI;        // UI de combustible (se oculta al inicio)
-    // --------------------------
+    public Jetpack jetpack;
+    public GameObject barraCombustibleUI;
 
-    // --------------------------
-    // PAUSA DEL TIMER
+    [Header("Logro Patines")]
+    public int gatosParaPatines = 15;
+    public bool patinesDesbloqueados = false;
+    public Animator patinesPopupAnimator;
+    public GameObject iconoPatinesUI;
+
     [Header("Control de pausa por gatos limpios")]
     public int gatosPorPausa = 5;
     public float duracionPausa = 10f;
 
+    [Header("Notificación Timer")]
+    public Animator timerPopupAnimator;
+
     private int gatosLimpiosActual = 0;
     private bool enPausa = false;
-    // --------------------------
 
     private Timer timer;
 
+    [Header("Arma 2")]
+    public bool arma2Desbloqueada = false;
+    public Animator arma2PopupAnimator;
+    public GameObject arma2AmmoUI;
+    [Header("Arma 3")]
+    public bool arma3Desbloqueada = false;
+    public Animator arma3PopupAnimator;
+    public GameObject arma3AmmoUI;     
+    public int gatosParaArma2 = 8;
+    public int gatosParaArma3 = 15;
+
     private void Awake()
     {
+        // --- Singleton ---
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoad(gameObject);
+
+            // Escuchar cambios de escena
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
+            return;
+        }
+    }
+    
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // --- AUTODESTRUIR si entramos al menú principal ---
+        if (scene.name == "Main Menu")   // <-- Cambia esto si tu menú tiene otro nombre
+        {
+            Debug.Log("GameManager destruido al entrar al menú principal.");
+            Destroy(gameObject);
         }
     }
 
+    private void OnDestroy()
+    {
+        // Evitar fuga de eventos
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+
     private void Start()
     {
+        ScoreManager.Instance?.ResetScore();
+
         tiempoRestante = tiempoTotal;
 
         // Buscar gatos al inicio
@@ -99,10 +133,14 @@ public class GameManager : MonoBehaviour
             panelVictoria.SetActive(false);
 
         if (barraCombustibleUI != null)
-            barraCombustibleUI.SetActive(false);   // Ocultar UI al inicio
+            barraCombustibleUI.SetActive(false);
 
-        
         StartCoroutine(EsperarYAsignarTimer());
+        if (arma2AmmoUI != null)
+            arma2AmmoUI.SetActive(false);
+
+        if (arma3AmmoUI != null)
+            arma3AmmoUI.SetActive(false);
     }
 
     private IEnumerator EsperarYAsignarTimer()
@@ -111,16 +149,12 @@ public class GameManager : MonoBehaviour
         timer = FindObjectOfType<Timer>();
     }
 
-    // --------------------------------------------
-    // CUANDO SE LIMPIA UN GATO
-    // --------------------------------------------
     public void GatoLimpio()
     {
         gatosRestantes--;
         gatosLimpiosActual++;
         ActualizarContador();
 
-        // PAUSA DEL TIMER
         if (!enPausa && gatosLimpiosActual % gatosPorPausa == 0)
             StartCoroutine(PausarTimerTemporalmente());
 
@@ -128,16 +162,40 @@ public class GameManager : MonoBehaviour
         if (gatosLimpiosActual >= limiteGatosLogro)
             DesbloquearLogroContador();
 
-        // 🟦 LOGRO JETPACK
+        // JETPACK
         if (!jetpackDesbloqueado && gatosLimpiosActual >= gatosParaJetpack)
             DesbloquearJetpack();
 
-        // VICTORIA
-        if (gatosRestantes <= 0)
+        // PATINES
+        if (!patinesDesbloqueados && gatosLimpiosActual >= gatosParaPatines)
+            DesbloquearPatines();
+
+        // ------------------------------------------------------------
+        //             DESBLOQUEO DE ARMAS AQUI
+        // ------------------------------------------------------------
+        if (!arma2Desbloqueada && gatosLimpiosActual >= gatosParaArma2)
         {
-            if (panelVictoria != null)
-                panelVictoria.SetActive(false);
+            arma2Desbloqueada = true;
+            Debug.Log("Arma 2 desbloqueada!");
+
+            if (arma2AmmoUI != null)
+                arma2AmmoUI.SetActive(true);
+
+            if (arma2PopupAnimator != null)
+                arma2PopupAnimator.SetTrigger("Mostrar");
         }
+
+        if (!arma3Desbloqueada && gatosLimpiosActual >= gatosParaArma3)
+        {
+            arma3Desbloqueada = true;
+            Debug.Log("Arma 3 desbloqueada!");
+
+            if (arma3AmmoUI != null)
+                arma3AmmoUI.SetActive(true);
+
+            if (arma3PopupAnimator != null)
+                arma3PopupAnimator.SetTrigger("Mostrar");
+        }        
     }
 
     private IEnumerator PausarTimerTemporalmente()
@@ -147,7 +205,7 @@ public class GameManager : MonoBehaviour
         if (timer != null)
         {
             timer.Pausar(true);
-            timer.CambiarColor(Color.yellow);
+            timer.CambiarColor(Color.green);
         }
 
         yield return new WaitForSeconds(duracionPausa);
@@ -170,9 +228,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // --------------------------------------------
-    // LOGRO GENERAL
-    // --------------------------------------------
     public void DesbloquearLogroContador()
     {
         if (logroDesbloqueado) return;
@@ -198,18 +253,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void OcultarCanvasLogros()
-    {
-        if (canvasLogros != null)
-        {
-            canvasLogros.SetActive(false);
-            canvasVisible = false;
-        }
-    }
-
-    // --------------------------------------------
-    // 🟦🟦 DESBLOQUEAR JETPACK 🟦🟦
-    // --------------------------------------------
     public void DesbloquearJetpack()
     {
         jetpackDesbloqueado = true;
@@ -218,16 +261,43 @@ public class GameManager : MonoBehaviour
         if (jetpack != null)
             jetpack.SetJetpackState(true);
 
-        Debug.Log("🚀 Jetpack desbloqueado!");
+        Debug.Log("Jetpack Unlocked!");
 
-        // 🔥 REPRODUCIR ANIMACIÓN
         if (jetpackPopupAnimator != null)
+        {
             jetpackPopupAnimator.SetTrigger("Mostrar");
+            Invoke(nameof(OcultarPopupJetpack), 3f);
+        }
 
-        // También mostrar texto de logro si quieres
         if (!canvasVisible && canvasLogros != null)
         {
             textoLogros.text = "Jetpack Unlocked!";
+            canvasLogros.SetActive(true);
+            canvasVisible = true;
+        }
+    }
+
+    private void OcultarPopupJetpack()
+    {
+        if (jetpackPopupAnimator != null)
+            jetpackPopupAnimator.SetTrigger("Ocultar");
+    }
+
+    public void DesbloquearPatines()
+    {
+        patinesDesbloqueados = true;
+
+        if (iconoPatinesUI != null)
+            iconoPatinesUI.SetActive(true);
+
+        if (patinesPopupAnimator != null)
+            patinesPopupAnimator.SetTrigger("Mostrar");
+
+        Invoke(nameof(OcultarPopupPatines), 3f);
+
+        if (canvasLogros != null)
+        {
+            textoLogros.text = "Roller Skates Unlocked!";
             canvasLogros.SetActive(true);
             canvasVisible = true;
 
@@ -235,4 +305,33 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void OcultarPopupPatines()
+    {
+        if (patinesPopupAnimator != null)
+            patinesPopupAnimator.SetTrigger("Ocultar");
+    }
+
+    private void OcultarCanvasLogros()
+    {
+        if (canvasLogros != null)
+        {
+            canvasLogros.SetActive(false);
+            canvasVisible = false;
+        }
+    }
+
+    public void MostrarPopupTimer()
+    {
+        if (timerPopupAnimator != null)
+        {
+            timerPopupAnimator.SetTrigger("Mostrar");
+            Invoke(nameof(OcultarPopupTimer), 3f);
+        }
+    }
+
+    private void OcultarPopupTimer()
+    {
+        if (timerPopupAnimator != null)
+            timerPopupAnimator.SetTrigger("Ocultar");
+    }
 }

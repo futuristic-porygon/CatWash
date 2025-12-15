@@ -1,72 +1,70 @@
 ﻿using UnityEngine;
 using TMPro;
-using System.Collections.Generic;
 
 public class NPCSystem : MonoBehaviour
 {
-    public GameObject canvas;               // Canvas del diálogo
+    public GameObject canvas;
     public TextMeshProUGUI dialogueText;
 
-    public GameObject pressEText;           // ← NUEVO texto "Press E to talk"
+    public GameObject pressEText;
 
-    bool player_detection = false;
-    bool isDialogueRunning = false;
+    public DialogueData dialogue;   // ← ScriptableObject con el diálogo
 
-    List<string> lines = new List<string>();
-    int index = 0;
+    private bool player_detection = false;
+    private bool isDialogueRunning = false;
+
+    private int index = 0;
 
     void Update()
     {
-        // Iniciar diálogo
         if (player_detection && Input.GetKeyDown(KeyCode.E) && !isDialogueRunning)
         {
             StartDialogue();
         }
-        // Avanzar diálogo
         else if (isDialogueRunning && Input.GetKeyDown(KeyCode.E))
         {
-            Next();
+            NextLine();
         }
     }
 
     void StartDialogue()
     {
-        pressEText.SetActive(false); // Ocultar "Press E"
+        if (dialogue == null || dialogue.lines.Count == 0)
+        {
+            Debug.LogWarning($"El NPC {name} no tiene diálogo asignado.");
+            return;
+        }
 
-        lines.Clear();
-        lines.Add("Heyo!");
-        lines.Add("Why don't you start cleaning that cat over there?");
-        lines.Add("There's a refill machine behind me. They're red to find them easily.");
-        lines.Add("You can always leave by opening the pause menu using ESC.");
+        pressEText.SetActive(false);
 
         index = 0;
         isDialogueRunning = true;
         PlayerMove.dialogue = true;
 
         canvas.SetActive(true);
-        dialogueText.text = lines[index];
+        dialogueText.text = dialogue.lines[index];
     }
 
-    void Next()
+    void NextLine()
     {
         index++;
 
-        if (index >= lines.Count)
+        if (index >= dialogue.lines.Count)
         {
             EndDialogue();
             return;
         }
 
-        dialogueText.text = lines[index];
+        dialogueText.text = dialogue.lines[index];
     }
 
     void EndDialogue()
     {
-        canvas.SetActive(false);
+        dialogueText.text = "";        // ← LIMPIA EL TEXTO
+        canvas.SetActive(false);       // Oculta la caja de diálogo
         isDialogueRunning = false;
         PlayerMove.dialogue = false;
 
-        // Mostrar "Press E" si sigues cerca
         if (player_detection)
             pressEText.SetActive(true);
     }
@@ -75,7 +73,6 @@ public class NPCSystem : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Jugador detectado");
             player_detection = true;
             if (!isDialogueRunning)
                 pressEText.SetActive(true);
@@ -87,7 +84,7 @@ public class NPCSystem : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player_detection = false;
-            pressEText.SetActive(false); // Ocultar texto
+            pressEText.SetActive(false);
         }
     }
 }

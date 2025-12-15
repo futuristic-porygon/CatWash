@@ -8,13 +8,14 @@ public class PauseMenu : MonoBehaviour
 
     private void Awake()
     {
-        DontDestroyOnLoad(this.gameObject);
+        // El PauseMenu debe iniciar oculto
         pauseMenu.SetActive(false);
+
+        // Configuración de cursor para gameplay
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -33,7 +34,7 @@ public class PauseMenu : MonoBehaviour
         isPaused = true;
 
         Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None; 
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void ResumeGame()
@@ -43,14 +44,19 @@ public class PauseMenu : MonoBehaviour
         isPaused = false;
 
         Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked; 
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
+        isPaused = false;
+
+        // Restaurar comportamiento normal del mouse
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         SceneManager.LoadScene("Main Menu");
-        
     }
 
     public void ExitGame()

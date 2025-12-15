@@ -20,6 +20,7 @@ public class Raycasteo : MonoBehaviour
     public int maxAmmo = 10;
     private int currentAmmo;
     private bool sinMunicion = false;
+    public WeaponType tipoArma;
 
     [Header("UI")]
     [SerializeField] private Image ammoFill; // 👉 barra de agua interna

@@ -21,6 +21,8 @@ public class Jetpack : MonoBehaviour
 
     public bool jetpackUnlocked = false;
 
+    private bool jetpackSoundPlaying = false;
+
     void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
@@ -33,9 +35,29 @@ public class Jetpack : MonoBehaviour
     {
         // Input jetpack
         if (Input.GetKeyDown(KeyCode.Space))
+        {
             isHoldingSpace = true;
+
+            // ⏯️ Iniciar sonido loop solo una vez
+            if (jetpackUnlocked && !jetpackSoundPlaying)
+            {
+                AudioManager.Instance.loopSource.clip = AudioManager.Instance.Jetpack;
+                AudioManager.Instance.loopSource.Play();
+                jetpackSoundPlaying = true;
+            }
+        }
+
         if (Input.GetKeyUp(KeyCode.Space))
+        {
             isHoldingSpace = false;
+
+            // ⏹️ Detener sonido cuando se suelta
+            if (jetpackSoundPlaying)
+            {
+                AudioManager.Instance.loopSource.Stop();
+                jetpackSoundPlaying = false;
+            }
+        }
 
         // Recargar combustible
         if (!isHoldingSpace && fuel < 100f)
@@ -46,42 +68,33 @@ public class Jetpack : MonoBehaviour
             {
                 fuel += fuelRefillRate * Time.deltaTime;
                 fuel = Mathf.Clamp(fuel, 0, 100);
-
                 fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
         }
-        else
-        {
-            fuelRefillTimer = 0f;
-        }
+        else fuelRefillTimer = 0f;
     }
 
     private void FixedUpdate()
     {
-        if (!jetpackUnlocked) return; // 🛑 No usar jetpack hasta estar desbloqueado
+        if (!jetpackUnlocked) return;
 
         if (isHoldingSpace && fuel > 0f)
         {
             if (transform.position.y < heightLimit)
             {
                 playerMove.veloY.y = jetpackForce;
-
-                fuel -= fuelDecreaseRate * Time.fixedDeltaTime;
-                fuel = Mathf.Clamp(fuel, 0, 100);
-
-                fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
             else
             {
                 playerMove.veloY.y = 0f;
-
-                fuel -= fuelDecreaseRate * Time.fixedDeltaTime;
-                fuel = Mathf.Clamp(fuel, 0, 100);
-
-                fuelDisplay?.SetFuelLevel(fuel, 100f);
             }
+
+            fuel -= fuelDecreaseRate * Time.fixedDeltaTime;
+            fuel = Mathf.Clamp(fuel, 0, 100);
+            fuelDisplay?.SetFuelLevel(fuel, 100f);
         }
     }
+
     public void SetJetpackState(bool state)
     {
         jetpackUnlocked = state;

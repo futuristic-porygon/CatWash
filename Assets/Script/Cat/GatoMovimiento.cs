@@ -1,16 +1,24 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.AI;
 
 public class GatoMovimiento : MonoBehaviour
 {
     private NavMeshAgent agente;
+    public Animator anim;
+
     private float tiempoEspera = 3f;
     private float contador;
 
     void Start()
     {
         agente = GetComponent<NavMeshAgent>();
+
+        if (anim == null)
+            anim = GetComponent<Animator>();
+
+        agente.stoppingDistance = 0.2f; // Evita que ‚Äúllegue‚Äù antes de tiempo
         contador = tiempoEspera;
+
         IrANuevaPosicion();
     }
 
@@ -18,7 +26,8 @@ public class GatoMovimiento : MonoBehaviour
     {
         contador -= Time.deltaTime;
 
-        // Si ya llegÛ al destino o pasÛ el tiempo de espera, buscar nueva posiciÛn
+        ActualizarAnimacion();
+
         if (!agente.pathPending && agente.remainingDistance <= agente.stoppingDistance)
         {
             if (contador <= 0f)
@@ -31,14 +40,20 @@ public class GatoMovimiento : MonoBehaviour
 
     void IrANuevaPosicion()
     {
-        // Buscar un punto aleatorio en el NavMesh
-        Vector3 randomDir = Random.insideUnitSphere * 10f; // radio de movimiento
-        randomDir += transform.position;
+        Vector2 random2D = Random.insideUnitCircle * 10f;
+        Vector3 destino = new Vector3(random2D.x, 0, random2D.y) + transform.position;
 
         NavMeshHit hit;
-        if (NavMesh.SamplePosition(randomDir, out hit, 10f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(destino, out hit, 2f, NavMesh.AllAreas))
         {
             agente.SetDestination(hit.position);
+            Debug.Log("Nuevo destino: " + hit.position);
         }
+    }
+
+    void ActualizarAnimacion()
+    {
+        float velocidad = agente.velocity.magnitude;
+        anim.SetBool("isWalking", velocidad > 0.1f);
     }
 }
