@@ -123,7 +123,7 @@ public class GameManager : MonoBehaviour
         tiempoRestante = tiempoTotal;
 
         // Buscar gatos al inicio
-        Gato[] gatos = FindObjectsOfType<Gato>();
+        Gato[] gatos = FindObjectsByType<Gato>();
         gatosTotales = gatos.Length;
         gatosRestantes = gatosTotales;
 
@@ -146,7 +146,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator EsperarYAsignarTimer()
     {
         yield return new WaitForSeconds(0.2f);
-        timer = FindObjectOfType<Timer>();
+        timer = FindAnyObjectByType<Timer>();
     }
 
     public void GatoLimpio()
