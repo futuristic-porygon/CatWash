@@ -15,7 +15,7 @@ public class WeaponSwitcher : MonoBehaviour
         gm = GameManager.Instance;
 
         if (gm == null)
-            gm = FindObjectOfType<GameManager>();
+            gm = FindAnyObjectByType<GameManager>();
     }
 
     void Start()

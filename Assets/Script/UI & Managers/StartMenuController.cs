@@ -16,7 +16,7 @@ public class StartMenuController : MonoBehaviour
     void Start()
     {
         // Busca el AudioManager en la escena actual
-        audioManager = FindObjectOfType<AudioManager>();
+        audioManager = FindAnyObjectByType<AudioManager>();
     }
 
     private void PlayButtonSound()
