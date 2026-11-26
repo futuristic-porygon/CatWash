@@ -1,8 +1,15 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
 
 public class Gato : MonoBehaviour
 {
+    // NavMeshAgent controls movement, so physical contacts between cats can
+    // fight that movement and leave both agents/animations apparently stuck.
+    // Keep colliders active for the player and world, but ignore cat pairs.
+    private static readonly HashSet<Gato> gatosActivos = new HashSet<Gato>();
+    private Collider[] collidersGato;
+
     public float suciedad = 60f;
     public Material limpioMat;
     private Renderer rend;
@@ -27,6 +34,49 @@ public class Gato : MonoBehaviour
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        collidersGato = GetComponentsInChildren<Collider>(true);
+    }
+
+    private void OnEnable()
+    {
+        if (collidersGato == null)
+            collidersGato = GetComponentsInChildren<Collider>(true);
+
+        foreach (Gato otroGato in gatosActivos)
+        {
+            if (otroGato != null && otroGato != this)
+                IgnorarColisionCon(otroGato, true);
+        }
+
+        gatosActivos.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        gatosActivos.Remove(this);
+        foreach (Gato otroGato in gatosActivos)
+        {
+            if (otroGato != null)
+                IgnorarColisionCon(otroGato, false);
+        }
+    }
+
+    private void IgnorarColisionCon(Gato otroGato, bool ignorar)
+    {
+        if (collidersGato == null || otroGato.collidersGato == null)
+            return;
+
+        foreach (Collider propio in collidersGato)
+        {
+            if (propio == null)
+                continue;
+
+            foreach (Collider ajeno in otroGato.collidersGato)
+            {
+                if (ajeno != null)
+                    Physics.IgnoreCollision(propio, ajeno, ignorar);
+            }
+        }
     }
 
     void Start()
@@ -81,3 +131,4 @@ public class Gato : MonoBehaviour
         }
     }
 }
+
