@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
@@ -7,7 +7,7 @@ public class GatoHuida : MonoBehaviour
     private NavMeshAgent agente;
     private Transform jugador;
 
-    public Animator anim; // ← igual que los otros gatos
+    public Animator anim;
 
     [Header("Parámetros de huida")]
     public float rangoHuida = 8f;
@@ -16,17 +16,19 @@ public class GatoHuida : MonoBehaviour
     public float velocidadNormal = 2f;
     public float velocidadHuida = 5f;
     public float rotacionSuavizada = 8f;
+    public float distanciaBusquedaNavMesh = 4f;
 
-    private bool estaHuyendo = false;
+    private bool estaHuyendo;
 
-    void Start()
+    private void Awake()
     {
         agente = GetComponent<NavMeshAgent>();
-
-        // Obtener Animator si no está asignado
         if (anim == null)
             anim = GetComponent<Animator>();
+    }
 
+    private void Start()
+    {
         GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
         if (jugadorObj != null)
             jugador = jugadorObj.transform;
@@ -34,76 +36,94 @@ public class GatoHuida : MonoBehaviour
             Debug.LogWarning($"[{name}] No se encontró un objeto con tag 'Player'.");
 
         agente.speed = velocidadNormal;
+        agente.avoidancePriority = Random.Range(0, 100);
+        IntentarIniciarAgente();
     }
 
-    void Update()
+    private void Update()
     {
-        if (jugador == null) return;
+        if (!agente.isOnNavMesh)
+        {
+            IntentarIniciarAgente();
+            ActualizarAnimacion();
+            return;
+        }
+
+        if (jugador == null)
+        {
+            ActualizarAnimacion();
+            return;
+        }
 
         float distanciaJugador = Vector3.Distance(transform.position, jugador.position);
-
-        // Iniciar huida
         if (distanciaJugador <= rangoHuida)
         {
             estaHuyendo = true;
             agente.speed = velocidadHuida;
         }
-
-        // Detener huida cuando está lejos
-        if (estaHuyendo && distanciaJugador > distanciaSegura)
+        else if (estaHuyendo && distanciaJugador > distanciaSegura)
         {
             estaHuyendo = false;
             agente.speed = velocidadNormal;
             agente.ResetPath();
         }
 
-        // Movimiento mientras huye
         if (estaHuyendo)
-        {
             HuirDelJugador();
-        }
 
-        // Rotación suave hacia dirección de movimiento
         if (agente.velocity.sqrMagnitude > 0.1f)
         {
             Quaternion rotacionDeseada = Quaternion.LookRotation(agente.velocity.normalized);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacionDeseada, Time.deltaTime * rotacionSuavizada);
         }
 
-        // Actualizar animación
         ActualizarAnimacion();
     }
 
-    void HuirDelJugador()
+    private void HuirDelJugador()
     {
-        Vector3 direccionHuida = (transform.position - jugador.position).normalized;
-        Vector3 destinoPropuesto = transform.position + direccionHuida * distanciaHuida;
+        Vector3 direccionHuida = transform.position - jugador.position;
+        direccionHuida.y = 0f;
+        if (direccionHuida.sqrMagnitude < 0.01f)
+            direccionHuida = transform.forward;
+        direccionHuida.Normalize();
 
-        Debug.DrawLine(transform.position, destinoPropuesto, Color.red);
-
-        if (NavMesh.SamplePosition(destinoPropuesto, out NavMeshHit hit, 3f, NavMesh.AllAreas))
+        for (int intento = 0; intento < 8; intento++)
         {
+            float angulo = intento == 0 ? 0f : (intento % 2 == 1 ? 1f : -1f) * ((intento + 1) / 2) * 30f;
+            Vector3 direccion = Quaternion.Euler(0f, angulo, 0f) * direccionHuida;
+            Vector3 destinoPropuesto = transform.position + direccion * distanciaHuida;
+
+            if (!NavMesh.SamplePosition(destinoPropuesto, out NavMeshHit hit,
+                    distanciaBusquedaNavMesh, agente.areaMask))
+                continue;
+
+            NavMeshPath ruta = new NavMeshPath();
+            if (!agente.CalculatePath(hit.position, ruta) || ruta.status != NavMeshPathStatus.PathComplete)
+                continue;
+
             agente.SetDestination(hit.position);
-        }
-        else
-        {
-            Vector3 alternativo = Quaternion.Euler(0, 45, 0) * direccionHuida;
-            Vector3 destinoAlterno = transform.position + alternativo * distanciaHuida;
-
-            if (NavMesh.SamplePosition(destinoAlterno, out NavMeshHit hit2, 3f, NavMesh.AllAreas))
-            {
-                agente.SetDestination(hit2.position);
-            }
+            return;
         }
     }
 
-    void ActualizarAnimacion()
+    private void IntentarIniciarAgente()
     {
-        float velocidad = agente.velocity.magnitude;
+        if (agente != null && !agente.isOnNavMesh &&
+            NavMesh.SamplePosition(transform.position, out NavMeshHit hit,
+                distanciaBusquedaNavMesh, agente.areaMask))
+        {
+            agente.Warp(hit.position);
+        }
+    }
 
-        bool estaCaminando = velocidad > 0.1f;
-
-        // Usa el mismo parámetro que los otros scripts
-        anim.SetBool("isWalking", estaCaminando);
+    private void ActualizarAnimacion()
+    {
+        if (anim != null)
+        {
+            bool estaCaminando = agente != null && agente.isOnNavMesh && agente.velocity.sqrMagnitude > 0.01f;
+            anim.SetBool("isWalking", estaCaminando);
+        }
     }
 }
+

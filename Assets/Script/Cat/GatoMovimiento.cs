@@ -1,59 +1,99 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class GatoMovimiento : MonoBehaviour
 {
     private NavMeshAgent agente;
     public Animator anim;
 
-    private float tiempoEspera = 3f;
+    [SerializeField] private float tiempoEspera = 3f;
+    [SerializeField] private float radioMovimiento = 10f;
+    [SerializeField] private float distanciaBusquedaNavMesh = 4f;
     private float contador;
 
-    void Start()
+    private void Awake()
     {
         agente = GetComponent<NavMeshAgent>();
-
         if (anim == null)
             anim = GetComponent<Animator>();
+    }
 
-        agente.stoppingDistance = 0.2f; // Evita que “llegue” antes de tiempo
+    private void Start()
+    {
+        agente.stoppingDistance = 0.2f;
+        agente.avoidancePriority = Random.Range(0, 100);
         contador = tiempoEspera;
-
-        IrANuevaPosicion();
+        IntentarIniciarAgente();
     }
 
-    void Update()
+    private void Update()
     {
+        if (!agente.isOnNavMesh)
+        {
+            IntentarIniciarAgente();
+            ActualizarAnimacion(false);
+            return;
+        }
+
         contador -= Time.deltaTime;
+        ActualizarAnimacion(agente.velocity.magnitude > 0.1f);
 
-        ActualizarAnimacion();
+        if (agente.pathPending || contador > 0f)
+            return;
 
-        if (!agente.pathPending && agente.remainingDistance <= agente.stoppingDistance)
+        bool llegoAlDestino = agente.hasPath && agente.remainingDistance <= agente.stoppingDistance;
+        bool rutaFallida = agente.pathStatus == NavMeshPathStatus.PathInvalid ||
+                           (agente.pathStatus == NavMeshPathStatus.PathPartial &&
+                            agente.remainingDistance <= agente.stoppingDistance);
+
+        if (llegoAlDestino || rutaFallida || !agente.hasPath)
         {
-            if (contador <= 0f)
-            {
-                IrANuevaPosicion();
-                contador = tiempoEspera;
-            }
+            IrANuevaPosicion();
+            contador = tiempoEspera;
         }
     }
 
-    void IrANuevaPosicion()
+    private void IntentarIniciarAgente()
     {
-        Vector2 random2D = Random.insideUnitCircle * 10f;
-        Vector3 destino = new Vector3(random2D.x, 0, random2D.y) + transform.position;
+        if (agente == null || agente.isOnNavMesh)
+            return;
 
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(destino, out hit, 2f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit,
+                distanciaBusquedaNavMesh, agente.areaMask))
         {
+            agente.Warp(hit.position);
+            IrANuevaPosicion();
+        }
+    }
+
+    private void IrANuevaPosicion()
+    {
+        if (agente == null || !agente.isOnNavMesh)
+            return;
+
+        for (int intento = 0; intento < 8; intento++)
+        {
+            Vector2 desplazamiento = Random.insideUnitCircle * radioMovimiento;
+            Vector3 destinoPropuesto = transform.position + new Vector3(desplazamiento.x, 0f, desplazamiento.y);
+
+            if (!NavMesh.SamplePosition(destinoPropuesto, out NavMeshHit hit,
+                    distanciaBusquedaNavMesh, agente.areaMask))
+                continue;
+
+            NavMeshPath ruta = new NavMeshPath();
+            if (!agente.CalculatePath(hit.position, ruta) || ruta.status != NavMeshPathStatus.PathComplete)
+                continue;
+
             agente.SetDestination(hit.position);
-            Debug.Log("Nuevo destino: " + hit.position);
+            return;
         }
     }
 
-    void ActualizarAnimacion()
+    private void ActualizarAnimacion(bool caminando)
     {
-        float velocidad = agente.velocity.magnitude;
-        anim.SetBool("isWalking", velocidad > 0.1f);
+        if (anim != null)
+            anim.SetBool("isWalking", caminando);
     }
 }
+

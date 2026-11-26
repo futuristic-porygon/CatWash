@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
@@ -7,25 +7,26 @@ public class GatoAtraido : MonoBehaviour
     private NavMeshAgent agente;
     private Transform jugador;
 
-    public Animator anim; // ← ahora es público igual que en el otro gato
+    public Animator anim;
 
     [Header("Parámetros de atracción")]
     public float rangoDeteccion = 10f;
     public float distanciaParada = 2f;
     public float velocidadNormal = 3f;
     public float rotacionSuavizada = 8f;
+    public float distanciaBusquedaNavMesh = 4f;
 
-    private bool siguiendoJugador = false;
+    private bool siguiendoJugador;
 
-    void Start()
+    private void Awake()
     {
         agente = GetComponent<NavMeshAgent>();
-
-        // Obtener Animator si no fue asignado en el Inspector
         if (anim == null)
             anim = GetComponent<Animator>();
+    }
 
-        // Buscar jugador
+    private void Start()
+    {
         GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
         if (jugadorObj != null)
             jugador = jugadorObj.transform;
@@ -34,32 +35,52 @@ public class GatoAtraido : MonoBehaviour
 
         agente.speed = velocidadNormal;
         agente.stoppingDistance = distanciaParada;
+        agente.avoidancePriority = Random.Range(0, 100);
+        IntentarIniciarAgente();
     }
 
-    void Update()
+    private void Update()
     {
-        if (jugador == null) return;
+        if (!agente.isOnNavMesh)
+        {
+            IntentarIniciarAgente();
+            ActualizarAnimacion();
+            return;
+        }
+
+        if (jugador == null)
+        {
+            agente.isStopped = true;
+            ActualizarAnimacion();
+            return;
+        }
 
         float distancia = Vector3.Distance(transform.position, jugador.position);
+        siguiendoJugador = distancia <= rangoDeteccion && distancia > distanciaParada;
 
-        if (distancia <= rangoDeteccion && distancia > distanciaParada)
+        if (siguiendoJugador && NavMesh.SamplePosition(jugador.position, out NavMeshHit hit,
+                distanciaBusquedaNavMesh, agente.areaMask))
         {
-            siguiendoJugador = true;
-            agente.isStopped = false;
-            agente.SetDestination(jugador.position);
+            NavMeshPath ruta = new NavMeshPath();
+            siguiendoJugador = agente.CalculatePath(hit.position, ruta) && ruta.status == NavMeshPathStatus.PathComplete;
+            if (siguiendoJugador)
+            {
+                agente.isStopped = false;
+                agente.SetDestination(hit.position);
+            }
         }
         else
         {
             siguiendoJugador = false;
-            agente.isStopped = true;
         }
 
-        // Rotación suave hacia el jugador
+        if (!siguiendoJugador)
+            agente.isStopped = true;
+
         if (siguiendoJugador)
         {
-            Vector3 dir = (jugador.position - transform.position).normalized;
-            dir.y = 0;
-
+            Vector3 dir = jugador.position - transform.position;
+            dir.y = 0f;
             if (dir.sqrMagnitude > 0.01f)
             {
                 Quaternion rot = Quaternion.LookRotation(dir);
@@ -70,11 +91,25 @@ public class GatoAtraido : MonoBehaviour
         ActualizarAnimacion();
     }
 
-    void ActualizarAnimacion()
+    private void IntentarIniciarAgente()
     {
-        float velocidad = new Vector3(agente.velocity.x, 0, agente.velocity.z).magnitude;
-        bool estaCaminando = velocidad > 0.1f;
+        if (agente != null && !agente.isOnNavMesh &&
+            NavMesh.SamplePosition(transform.position, out NavMeshHit hit,
+                distanciaBusquedaNavMesh, agente.areaMask))
+        {
+            agente.Warp(hit.position);
+        }
+    }
 
-        anim.SetBool("isWalking", estaCaminando);
+    private void ActualizarAnimacion()
+    {
+        if (anim != null)
+        {
+            float velocidad = agente != null && agente.isOnNavMesh
+                ? new Vector3(agente.velocity.x, 0f, agente.velocity.z).magnitude
+                : 0f;
+            anim.SetBool("isWalking", velocidad > 0.1f);
+        }
     }
 }
+
