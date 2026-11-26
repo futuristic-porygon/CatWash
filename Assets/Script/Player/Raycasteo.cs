@@ -22,6 +22,9 @@ public class Raycasteo : MonoBehaviour
     private bool sinMunicion = false;
     public WeaponType tipoArma;
 
+    // Intervalo entre disparos: cada tipo mantiene un ritmo propio.
+    private float siguienteDisparo;
+
     [Header("UI")]
     [SerializeField] private Image ammoFill; // 👉 barra de agua interna
 
@@ -74,13 +77,15 @@ public class Raycasteo : MonoBehaviour
             }
         }
 
-        // Clic izquierdo → Disparar
-        if (Input.GetMouseButtonDown(0))
+        // Mantener el clic permite disparar de forma continua respetando la cadencia.
+        if (Input.GetMouseButton(0) && Time.time >= siguienteDisparo)
         {
             if (currentAmmo > 0)
             {
                 Transform clone = Instantiate(Bala, shooter.position, shooter.rotation);
                 clone.GetComponent<Rigidbody>().AddForce(transform.forward * bolaVelo);
+
+                siguienteDisparo = Time.time + ObtenerIntervaloDisparo();
 
                 audioManager.PlaySFX(audioManager.weapon);
 
@@ -97,6 +102,21 @@ public class Raycasteo : MonoBehaviour
             {
                 //Debug.Log("No puedes disparar. Necesitas recargar en una estación.");
             }
+        }
+    }
+
+    private float ObtenerIntervaloDisparo()
+    {
+        switch (tipoArma)
+        {
+            case WeaponType.Pistola:
+                return 0.45f;
+            case WeaponType.Rifle:
+                return 0.12f;
+            case WeaponType.Escopeta:
+                return 0.8f;
+            default:
+                return 0.45f;
         }
     }
 
@@ -119,3 +139,4 @@ public class Raycasteo : MonoBehaviour
         //Debug.Log("Munición restaurada desde estación de recarga.");
     }
 }
+
